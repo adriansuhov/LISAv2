@@ -90,16 +90,28 @@ Get-ChildItem .\Libraries -Recurse | Where-Object { $_.FullName.EndsWith(".psm1"
 
 try {
 	# Copy required binary files to working folder
+	# Copy required binary files to working folder
 	$CurrentDirectory = Get-Location
 	$CmdArray = '7za.exe','dos2unix.exe', 'gawk','jq','plink.exe','pscp.exe'
+
+	$WebClient = New-Object System.Net.WebClient
+	$xmlSecret = [xml](Get-Content $XMLSecretFile)
+	$azureBlobLoc = $xmlSecret.secrets.blobStorageLocation
 
 	$CmdArray | ForEach-Object {
 		# Verify the binary file in Tools location
 		if ( Test-Path $CurrentDirectory/Tools/$_ ) {
 			Write-Host "$_ File exists already and available to use in Tools folder."
 		} else {
-			Write-Error "File not found in Tools folder: $_. Testing terminates."
-			throw [System.IO.FileNotFoundException]
+
+			$WebClient.DownloadFile("$azureBlobLoc/$_","$CurrentDirectory\Tools\$_")
+
+			if (Test-Path "$CurrentDirectory\Tools\$_") {
+				Write-Host "File $_ successfully downloaded in Tools folder: $_."
+			} else {
+				Write-Error "File not found in Tools folder: $_. Testing terminates."
+				throw [System.IO.FileNotFoundException]	
+			}
 		}
 	}
 
