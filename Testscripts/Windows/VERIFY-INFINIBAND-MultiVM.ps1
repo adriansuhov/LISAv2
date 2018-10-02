@@ -3,6 +3,8 @@
 
 function Main {
     $resultArr = @()
+    # Define two different users in run-time
+    $test_super_user="root"
 
     try {
         $NoServer = $true
@@ -89,26 +91,45 @@ function Main {
         LogMsg "constanst.sh created successfully..."
         #endregion
 
-        #region Upload files to master VM...
-        RemoteCopy -uploadTo $ServerVMData.PublicIP -port $ServerVMData.SSHPort `
-            -files "$constantsFile,$($CurrentTestData.files)" -username "root" -password $password -upload
+        #region Upload files to client and master VM
+        foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
+            RemoteCopy -uploadTo $ClientVMData.PublicIP -port $ClientVMData.SSHPort `
+                -files "$constantsFile,$($CurrentTestData.files)" -username $test_super_user -password $password -upload
+
+            RemoteCopy -uploadTo $ClientVMData.PublicIP -port $ClientVMData.SSHPort `
+                -files "$constantsFile" -username $test_super_user -password $password -upload
+        }
         #endregion
 
-        RemoteCopy -uploadTo $ServerVMData.PublicIP -port $ServerVMData.SSHPort `
-            -files "$constantsFile" -username "root" -password $password -upload
-        $out = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort `
-        -username "root" -password $password -command "chmod +x *.sh"
         $RemainingRebootIterations = $CurrentTestData.NumberOfReboots
         $ExpectedSuccessCount = [int]($CurrentTestData.NumberOfReboots) + 1
         $TotalSuccessCount = 0
         $Iteration = 0
+
+        LogMsg "SetupRDMS is called"
+        # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
+        foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
+            RunLinuxCmd -ip $ClientVMData.PublicIP -port $ClientVMData.SSHPort -username $test_super_user `
+                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 960
+        }
+        LogMsg "SetupRDMS is done"
+
+        # Reboot VM to apply RDMA changes
+        foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
+            $restartStatus = RestartAllDeployments -allVMData $ClientVMData
+            LogMsg "Rebooting VM $ClientVMData.RoleName after all setup is done: $restartStatus"
+            Start-Sleep 10 # Wait for ssh services stop
+        }
+        # Wait for VM boot up and update ip address
+        Start-Sleep -Seconds 360
+
         do {
             if ($FirstRun) {
                 $FirstRun = $false
                 $ContinueMPITest = $true
                 foreach ( $ClientVMData in $ClientMachines ) {
                     LogMsg "Getting initial MAC address info from $($ClientVMData.RoleName)"
-                    RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                    RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                         -password $password "ifconfig $InfinibandNic | grep ether | awk '{print `$2}' > InitialInfiniBandMAC.txt"
                 }
             }
@@ -116,9 +137,9 @@ function Main {
                 $ContinueMPITest = $true
                 foreach ( $ClientVMData in $ClientMachines ) {
                     LogMsg "Step 1/2: Getting current MAC address info from $($ClientVMData.RoleName)"
-                    $CurrentMAC = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                    $CurrentMAC = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                         -password $password "ifconfig $InfinibandNic | grep ether | awk '{print `$2}'"
-                    $InitialMAC = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                    $InitialMAC = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                         -password $password "cat InitialInfiniBandMAC.txt"
                     if ($CurrentMAC -eq $InitialMAC) {
                         LogMsg "Step 2/2: MAC address verified in $($ClientVMData.RoleName)."
@@ -134,43 +155,43 @@ function Main {
                 #region EXECUTE TEST
                 $Iteration += 1
                 LogMsg "******************Iteration - $Iteration/$ExpectedSuccessCount*******************"
-                $TestJob = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                $TestJob = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -command "/root/TestRDMA_MultiVM.sh" -RunInBackground
                 #endregion
 
                 #region MONITOR TEST
                 while ( (Get-Job -Id $TestJob).State -eq "Running" ) {
-                    $CurrentStatus = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                    $CurrentStatus = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                         -password $password -command "tail -n 1 /root/TestExecution.log"
                     LogMsg "Current Test Staus : $CurrentStatus"
                     WaitFor -seconds 10
                 }
 
-                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -download -downloadTo $LogDir -files "/root/$InfinibandNic-status*"
-                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -download -downloadTo $LogDir -files "/root/IMB-*"
-                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -download -downloadTo $LogDir -files "/root/kernel-logs-*"
-                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -download -downloadTo $LogDir -files "/root/TestExecution.log"
-                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
+                RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -download -downloadTo $LogDir -files "/root/state.txt"
                 $ConsoleOutput = ( Get-Content -Path "$LogDir\TestExecution.log" | Out-String )
-                $FinalStatus = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username "root" `
-                    -password $password -command "cat /root/state.txt"
+                $FinalStatus = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
+                    -password $password -command "cat /$test_super_user/state.txt"
                 if ($Iteration -eq 1) {
                     $TempName = "FirstBoot"
                 }
                 else {
                     $TempName = "Reboot"
                 }
-                $out = mkdir -Path "$LogDir\InfiniBand-Verification-$Iteration-$TempName" -Force | Out-Null
-                $out = Move-Item -Path "$LogDir\$InfinibandNic-status*" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
-                $out = Move-Item -Path "$LogDir\IMB-*" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
-                $out = Move-Item -Path "$LogDir\kernel-logs-*" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
-                $out = Move-Item -Path "$LogDir\TestExecution.log" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
-                $out = Move-Item -Path "$LogDir\state.txt" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
+                New-Item -Path "$LogDir\InfiniBand-Verification-$Iteration-$TempName" -Force -ItemType Directory | Out-Null
+                Move-Item -Path "$LogDir\$InfinibandNic-status*" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
+                Move-Item -Path "$LogDir\IMB-*" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
+                Move-Item -Path "$LogDir\kernel-logs-*" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
+                Move-Item -Path "$LogDir\TestExecution.log" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
+                Move-Item -Path "$LogDir\state.txt" -Destination "$LogDir\InfiniBand-Verification-$Iteration-$TempName" | Out-Null
 
                 #region Check if $InfinibandNic got IP address
                 $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
