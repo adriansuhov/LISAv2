@@ -116,7 +116,7 @@ function Main {
 
         # Reboot VM to apply RDMA changes
         foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
-            $restartStatus = RestartAllDeployments -allVMData $ClientVMData
+            $restartStatus = RestartAllDeployments -AllVMData $ClientVMData
             LogMsg "Rebooting VM $ClientVMData.RoleName after all setup is done: $restartStatus"
             Start-Sleep 10 # Wait for ssh services stop
         }

@@ -331,7 +331,7 @@ function Main() {
 			SetTestStateCompleted
 		fi
 
-	elif [ $mpi_type -eq "ibm"]; then
+	elif [[ $mpi_type -eq "ibm" ]]; then
 
 		# Search mpirun and benchmark testing files
 		# mpirun -n <P> IMB-<component> [argement], where <P> is the number of processes. P=1 is recommended for 
@@ -421,10 +421,10 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests"
+			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests allreduce"
 			LogMsg "IMB-MPI1 test iteration $attempt - Running."
 
-			$mpi_run_path -hostlist $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests > IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
+			$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests allreduce > IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 
 			mpi_status=$?
 			
@@ -507,10 +507,10 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests"
+			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests"
 			LogMsg "IMB-NBC test iteration $attempt - Running."
 
-			$mpi_run_path -hostlist $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests > IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+			$mpi_run_path -hostlist $master,$slaves -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests > IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 			nbc_status=$?
 		
 			if [ $nbc_status -eq 0 ]; then
