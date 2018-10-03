@@ -91,16 +91,13 @@ function Main {
         LogMsg "constanst.sh created successfully..."
         #endregion
 
-        #region Upload files to client and master VM
-        foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
-            RemoteCopy -uploadTo $ClientVMData.PublicIP -port $ClientVMData.SSHPort `
+        #region Upload files to master VM
+        foreach ( $VMData in $AllVMData) {
+            RemoteCopy -uploadTo $VMData.PublicIP -port $VMData.SSHPort `
                 -files "$constantsFile,$($CurrentTestData.files)" -username $test_super_user -password $password -upload
-
-            RemoteCopy -uploadTo $ClientVMData.PublicIP -port $ClientVMData.SSHPort `
-                -files "$constantsFile" -username $test_super_user -password $password -upload
         }
         #endregion
-
+        
         $RemainingRebootIterations = $CurrentTestData.NumberOfReboots
         $ExpectedSuccessCount = [int]($CurrentTestData.NumberOfReboots) + 1
         $TotalSuccessCount = 0
@@ -110,18 +107,15 @@ function Main {
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
         foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
             RunLinuxCmd -ip $ClientVMData.PublicIP -port $ClientVMData.SSHPort -username $test_super_user `
-                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 960
+                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 1200
         }
         LogMsg "SetupRDMS is done"
 
         # Reboot VM to apply RDMA changes
-        foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
-            $restartStatus = RestartAllDeployments -AllVMData $ClientVMData
-            LogMsg "Rebooting VM $ClientVMData.RoleName after all setup is done: $restartStatus"
-            Start-Sleep 10 # Wait for ssh services stop
-        }
+        $restartStatus = RestartAllDeployments -AllVMData $AllVMData
+        LogMsg "Rebooting All VMS after all setup is done: $restartStatus"
         # Wait for VM boot up and update ip address
-        Start-Sleep -Seconds 360
+        Start-Sleep -Seconds 240
 
         do {
             if ($FirstRun) {
