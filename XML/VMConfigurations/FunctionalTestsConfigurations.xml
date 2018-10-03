@@ -655,7 +655,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>controller-vm</RoleName>
+                <RoleName>client-vm-16</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -668,7 +668,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-1</RoleName>
+                <RoleName>client-vm-17</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -681,7 +681,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-2</RoleName>
+                <RoleName>client-vm-18</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -694,7 +694,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-3</RoleName>
+                <RoleName>client-vm-19</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -707,7 +707,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-4</RoleName>
+                <RoleName>client-vm-20</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -720,7 +720,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-5</RoleName>
+                <RoleName>client-vm-21</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -733,7 +733,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-6</RoleName>
+                <RoleName>client-vm-22</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -746,7 +746,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-7</RoleName>
+                <RoleName>client-vm-23</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -759,7 +759,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-8</RoleName>
+                <RoleName>client-vm-24</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -772,7 +772,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-9</RoleName>
+                <RoleName>client-vm-25</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -785,7 +785,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-10</RoleName>
+                <RoleName>client-vm-26</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -798,7 +798,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-11</RoleName>
+                <RoleName>client-vm-27</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -811,7 +811,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-12</RoleName>
+                <RoleName>client-vm-28</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -824,7 +824,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-13</RoleName>
+                <RoleName>client-vm-29</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -837,7 +837,7 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-14</RoleName>
+                <RoleName>client-vm-30</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
@@ -850,12 +850,25 @@
                 <state></state>
                 <InstanceSize>Standard_A8</InstanceSize>
                 <ARMInstanceSize>Standard_A8</ARMInstanceSize>
-                <RoleName>client-vm-15</RoleName>
+                <RoleName>client-vm-31</RoleName>
                 <EndPoints>
                     <Name>SSH</Name>
                     <Protocol>tcp</Protocol>
                     <LocalPort>22</LocalPort>
                     <PublicPort>1141</PublicPort>
+                </EndPoints>
+                <DataDisk></DataDisk>
+            </VirtualMachine>
+            <VirtualMachine>
+                <state></state>
+                <InstanceSize>Standard_A8</InstanceSize>
+                <ARMInstanceSize>Standard_A8</ARMInstanceSize>
+                <RoleName>client-vm-32</RoleName>
+                <EndPoints>
+                    <Name>SSH</Name>
+                    <Protocol>tcp</Protocol>
+                    <LocalPort>22</LocalPort>
+                    <PublicPort>1142</PublicPort>
                 </EndPoints>
                 <DataDisk></DataDisk>
             </VirtualMachine>
