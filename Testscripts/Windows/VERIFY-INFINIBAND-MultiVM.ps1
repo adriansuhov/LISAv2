@@ -105,8 +105,8 @@ function Main {
 
         LogMsg "SetupRDMS is called"
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
-        foreach ( $ClientVMData in $ClientMachines, $ServerVMData ) {
-            RunLinuxCmd -ip $ClientVMData.PublicIP -port $ClientVMData.SSHPort -username $test_super_user `
+        foreach ( $VMData in $AllVMData ) {
+            RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
                 -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 1200
         }
         LogMsg "SetupRDMS is done"
