@@ -26,7 +26,7 @@ HOMEDIR="/root"
 #
 # Constants/Globals
 #
-CONSTANTS_FILE="/root/constants.sh"
+CONSTANTS_FILE="$HOMEDIR/constants.sh"
 
 imb_mpi1_final_status=0
 imb_rma_final_status=0
@@ -47,6 +47,7 @@ function Collect_Kernel_Logs_From_All_VMs() {
 	done
 }
 
+# Compress the same pattern files to compressed_file_name
 function Compress_Files() {
 	compressed_file_name=$1
 	pattern=$2
@@ -73,10 +74,11 @@ else
 fi
 
 function Main() { 
-	LogMsg "MPI testing for $mpi_type starting ..."
+	LogMsg "Starting $mpi_type MPI tests..."
 
 	# This is common space for all three types of MPI testing
 	# Verify if ib_nic got IP address on All VMs in current cluster.
+	# ib_nic comes from constants.sh. where get those values from XML tags.
 	final_ib_nic_status=0
 	total_virtual_machines=0
 	err_virtual_machines=0
@@ -84,13 +86,16 @@ function Main() {
 
 	for vm in $master $slaves_array; do
 		LogMsg "Checking $ib_nic status in $vm"
+		# Verify ib_nic exists or not.
 		temp=$(ssh root@${vm} "ifconfig $ib_nic | grep 'inet '")
 		ib_nic_status=$?
 		ssh root@${vm} "ifconfig $ib_nic > $ib_nic-status-${vm}.txt"
 		scp root@${vm}:${ib_nic}-status-${vm}.txt .
 		if [ $ib_nic_status -eq 0 ]; then
+			# Verify ib_nic has IP address, which means IB setup is ready
 			LogMsg "${ib_nic} IP detected for ${vm}."
 		else
+			# Verify no IP address on ib_nic, which means IB setup is not ready
 			LogErr "${ib_nic} failed to get IP address for ${vm}."
 			err_virtual_machines=$(($err_virtual_machines+1))
 		fi
@@ -105,6 +110,7 @@ function Main() {
 		LogErr "INFINIBAND_VERIFICATION_FAILED_${ib_nic}"
 		exit 0
 	else
+		# Verify all VM have ib_nic available for further testing
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_${ib_nic}"
 	fi
 
@@ -554,8 +560,6 @@ function Main() {
 			LogMsg "INFINIBAND_VERIFIED_SUCCESSFULLY"
 			SetTestStateCompleted
 		fi
-
-# /opt/ibm/platform_mpi/bin/mpirun -udapl -e MPI_HASIC_UDAPL=ofa-v2-ib0 -np 2 -hostlist 10.0.0.5:1,10.0.0.4:1 /root/mpi-benchmarks/src_c/IMB-MPI1
 
 	else
 		# TODO: Open MPI part needs revision.
