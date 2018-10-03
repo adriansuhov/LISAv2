@@ -114,10 +114,10 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_${ib_nic}"
 	fi
 
-	## Verify MPI Tests
+	## Verify Intel MPI Tests
 	non_shm_mpi_settings=$(echo $mpi_settings | sed 's/shm://')
 
-	if [ $mpi_type == "intel" ]; then
+	if [[ $mpi_type == "intel" ]]; then
 
 		mpi_run_path=$(find / -name mpirun | grep intel64)
 		LogMsg "MPIRUN Path: $mpi_run_path"
@@ -132,7 +132,7 @@ function Main() {
 		LogMsg "IMB-NBC Path: $imb_nbc_path"
 
 
-		# Verify PingPong Tests (IntraNode).
+		# Verify Intel MPI PingPong Tests (IntraNode).
 		final_mpi_intranode_status=0
 
 		for vm in $master $slaves_array; do
@@ -160,7 +160,7 @@ function Main() {
 			LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
 		fi
 
-		# Verify PingPong Tests (InterNode).
+		# Verify Intel MPI PingPong Tests (InterNode).
 		final_mpi_internode_status=0
 
 		for vm in $slaves_array; do
@@ -187,7 +187,7 @@ function Main() {
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
 		fi
 
-		# Verify IMB-MPI1 (pingpong & allreduce etc) tests.
+		# Verify Intel MPI IMB-MPI1 (pingpong & allreduce etc) tests.
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
@@ -232,7 +232,7 @@ function Main() {
 
 		fi
 
-		# Verify IMB-RMA tests.
+		# Verify Intel MPI IMB-RMA tests.
 		total_attempts=$(seq 1 1 $imb_rma_tests_iterations)
 		imb_rma_final_status=0
 		for attempt in $total_attempts; do
@@ -277,7 +277,7 @@ function Main() {
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_RMA_ALLNODES"
 		fi
 
-		# Verify IMB-NBC tests.
+		# Verify Intel MPI IMB-NBC tests.
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
@@ -321,7 +321,8 @@ function Main() {
 
 		Collect_Kernel_Logs_From_All_VMs
 
-		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
+		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status \
+			+ $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
 
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $ib_nic_status"
@@ -342,7 +343,8 @@ function Main() {
 		# Search mpirun and benchmark testing files
 		# mpirun -n <P> IMB-<component> [argement], where <P> is the number of processes. P=1 is recommended for 
 		#				all I/O and message passing benchmarks except the single transfer ones.
-		#			<component> is the component-specific suffix that can take MPI1, EXT, IO, NBC, and RMA values.
+		#				, where <component> is the component-specific suffix that can take MPI1, 
+		#				EXT, IO, NBC, and RMA values.
 
 		# mpirun binary location
 		mpi_run_path=$(find / -name mpirun | grep platform_mpi/bin/mpirun)
@@ -372,7 +374,8 @@ function Main() {
 			LogMsg "$mpi_run_path -hostlist $vm,$master -np 2 $imb_ping_pong_path 4096"
 			LogMsg "Checking IMB-MPI1 Intranode status in $vm"
 
-			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np 2 $imb_ping_pong_path 4096 > IMB-MPI1-IntraNode-output-$vm.txt"
+			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np 2 $imb_ping_pong_path 4096 \
+				> IMB-MPI1-IntraNode-output-$vm.txt"
 			mpi_intranode_status=$?
 
 			scp root@${vm}:IMB-MPI1-IntraNode-output-$vm.txt .
@@ -402,7 +405,8 @@ function Main() {
 			LogMsg "$mpi_run_path -hostlist $master,$vm -np 2 $imb_ping_pong_path 4096"
 			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
 
-			$mpi_run_path -hostlist $master,$vm -np 2 $imb_ping_pong_path 4096 >IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
+			$mpi_run_path -hostlist $master,$vm -np 2 $imb_ping_pong_path 4096 \
+				> IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
 			mpi_internode_status=$?
 
 			if [ $mpi_internode_status -eq 0 ]; then
@@ -427,10 +431,12 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests allreduce"
+			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) \
+				$imb_mpi1_path $imb_mpi1_tests allreduce"
 			LogMsg "IMB-MPI1 test iteration $attempt - Running."
 
-			$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests allreduce > IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
+			$mpi_run_path -hostlist $master,$slaves -np $(($mpi1_ppn * $total_virtual_machines)) \
+				$imb_mpi1_path $imb_mpi1_tests allreduce > IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 
 			mpi_status=$?
 			
@@ -474,10 +480,12 @@ function Main() {
 		# total_attempts=$(seq 1 1 $imb_rma_tests_iterations)
 		# imb_rma_final_status=0
 		# for attempt in $total_attempts; do
-		# 	LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) $imb_rma_path $imb_rma_tests"
+		# 	LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) \
+		#		$imb_rma_path $imb_rma_tests"
 		# 	LogMsg "IMB-RMA test iteration $attempt - Running."
 
-		# 	$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) $imb_rma_path $imb_rma_tests > IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
+		# 	$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) $imb_rma_path $imb_rma_tests \
+		#		> IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
 
 		# 	rma_status=$?
 
@@ -510,13 +518,16 @@ function Main() {
 		#	- measuring the overlap of communication and computation
 		# 	- measuring pure communication time
 
+		# DEMO only. This if statement should not check in
+	if [ 0 ]; then 
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
 			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests"
 			LogMsg "IMB-NBC test iteration $attempt - Running."
 
-			$mpi_run_path -hostlist $master,$slaves -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests > IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+			$mpi_run_path -hostlist $master,$slaves -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests \
+				> IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 			nbc_status=$?
 		
 			if [ $nbc_status -eq 0 ]; then
@@ -542,18 +553,20 @@ function Main() {
 		else
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_NBC_ALLNODES"
 		fi
-
+	fi
 		Collect_Kernel_Logs_From_All_VMs
 
-		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
+		# finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status +\
+		# 	 $imb_rma_final_status + $imb_nbc_final_status))
+		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status))
 
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $ib_nic_status"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
 			LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
-			LogMsg "imb_rma_final_status: $imb_rma_final_status"
-			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
+			# LogMsg "imb_rma_final_status: $imb_rma_final_status"
+			# LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
 			LogErr "INFINIBAND_VERIFICATION_FAILED"
 			SetTestStateFailed
 		else
