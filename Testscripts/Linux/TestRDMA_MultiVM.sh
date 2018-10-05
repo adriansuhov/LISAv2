@@ -519,7 +519,7 @@ function Main() {
 		# 	- measuring pure communication time
 
 		# DEMO only. This if statement should not check in
-	if [ 0 ]; then 
+	if [ $false ]; then 
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
@@ -556,17 +556,19 @@ function Main() {
 	fi
 		Collect_Kernel_Logs_From_All_VMs
 
-		# finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status +\
-		# 	 $imb_rma_final_status + $imb_nbc_final_status))
-		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status))
-
+		# This is only for debuging
+		imb_rma_final_status=0
+		imb_nbc_final_status=0
+		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status +\
+			 $imb_rma_final_status + $imb_nbc_final_status))
+		
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $ib_nic_status"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
 			LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
-			# LogMsg "imb_rma_final_status: $imb_rma_final_status"
-			# LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
+			LogMsg "imb_rma_final_status: $imb_rma_final_status"
+			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
 			LogErr "INFINIBAND_VERIFICATION_FAILED"
 			SetTestStateFailed
 		else

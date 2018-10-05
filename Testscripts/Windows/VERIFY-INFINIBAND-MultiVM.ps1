@@ -157,9 +157,17 @@ function Main {
                 while ( (Get-Job -Id $TestJob).State -eq "Running" ) {
                     $CurrentStatus = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                         -password $password -command "tail -n 1 /root/TestExecution.log"
-                    LogMsg "Current Test Staus : $CurrentStatus"
+                    LogMsg "Current Test Status : $CurrentStatus"
+                    $temp=(Get-Job -Id $TestJob).State
+                    Write-Host "--------------------------------------------------------------------$temp-------------------------"
+                    $FinalStatus = RunLinuxCmd -ip $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
+                    -password $password -command "cat /$test_super_user/state.txt"
+                    Write-Host "$FinalStatus"
                     WaitFor -seconds 10
                 }
+
+                $temp=(Get-Job -Id $TestJob).State
+                    Write-Host "-FINALLY-------------------------------------------------------------------$temp-------------------------"
 
                 RemoteCopy -downloadFrom $ServerVMData.PublicIP -port $ServerVMData.SSHPort -username $test_super_user `
                     -password $password -download -downloadTo $LogDir -files "/root/$InfinibandNic-status*"
