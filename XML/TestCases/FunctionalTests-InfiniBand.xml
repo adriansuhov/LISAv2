@@ -565,10 +565,10 @@
         <Tags>rdma</Tags>
     </test>
     <test>
-        <testName>VERIFY-INFINIBAND-IBM-MPI-32VM-STANDARD-A8</testName>
+        <testName>VERIFY-INFINIBAND-IBM-MPI-32VM-STANDARD-A9</testName>
         <testScript>VERIFY-INFINIBAND-MultiVM.ps1</testScript>
         <setupType>RDMA32VMs</setupType>
-        <OverrideVMSize>Standard_A8</OverrideVMSize>
+        <OverrideVMSize>Standard_A9</OverrideVMSize>
         <SubtestValues>SOME,TEXTS,NEEDS,TO,BE,PRESENT,HERE,FOR,PRINTING,TEST,SUMMARY</SubtestValues>
         <files>.\Testscripts\Linux\utils.sh,.\Testscripts\Linux\TestRDMA_MultiVM.sh,.\Testscripts\Linux\SetupRDMA.sh</files>
         <Priority>P0</Priority>
