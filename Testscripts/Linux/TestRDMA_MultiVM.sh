@@ -519,7 +519,6 @@ function Main() {
 		# 	- measuring pure communication time
 
 		# DEMO only. This if statement should not check in
-	if [ $false ]; then 
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
@@ -553,7 +552,7 @@ function Main() {
 		else
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_NBC_ALLNODES"
 		fi
-	fi
+
 		Collect_Kernel_Logs_From_All_VMs
 
 		# This is only for debuging
