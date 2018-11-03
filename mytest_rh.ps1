@@ -1,0 +1,1 @@
+.\RunTests.ps1 -TestPlatform "Azure" -TestLocation "southcentralus" -RGIdentifier "rh75-juhlee" -ARMImageName "RedHat RHEL 7-LVM latest" -TestNames "VERIFY-INFINIBAND-IBM-MPI-8VM-STANDARD-A8" -XMLSecretFile "C:\Users\juhlee\Source\Repos\LISAv2-Exec\AzureSecrets.xml" -UpdateGlobalConfigurationFromSecretsFile  -UpdateXMLStringsFromSecretsFile
