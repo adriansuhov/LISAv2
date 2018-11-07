@@ -246,7 +246,7 @@ function Main {
                 LogMsg "$pattern : $currentResult"
                 $resultArr += $currentResult
                 $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData `
-                -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
+                    -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
                 #endregion
 
                 #region Check MPI1 all nodes tests
@@ -264,7 +264,8 @@ function Main {
                     }
                     LogMsg "$pattern : $currentResult"
                     $resultArr += $currentResult
-                    $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
+                    $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData `
+                        -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
                 }
                 #endregion
 
@@ -283,7 +284,8 @@ function Main {
                     }
                     LogMsg "$pattern : $currentResult"
                     $resultArr += $currentResult
-                    $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
+                    $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData `
+                        -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
                 }
                 #endregion
 
@@ -302,7 +304,8 @@ function Main {
                     }
                     LogMsg "$pattern : $currentResult"
                     $resultArr += $currentResult
-                    $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
+                    $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData `
+                        -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
                 }
                 #endregion
 
