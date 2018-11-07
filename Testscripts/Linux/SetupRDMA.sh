@@ -42,10 +42,22 @@ function Debug_Msg {
 }
 
 function Verify_File {
-	if [ -z $1 ]; then
+	# Verify if the file exists or not. 
+	# The first parameter is absolute path
+	if [ -f $1 ]; then
 		echo "File not found $1"
 	else
 		echo "File $1 found"
+	fi
+}
+
+function Found_File {
+	# The first parameter is file name, the second parameter is filtering
+	target_path=$(find / -name $1 | grep $2)
+	if [ -n $target_path ]; then
+		Debug_Msg "Verified $1 binary in $target_path successfully"
+	else
+		LogErr "Could not verify $1 binary in the system"
 	fi
 }
 
@@ -73,7 +85,7 @@ function Main() {
 
 	case $DISTRO in
 		redhat_7|centos_7)
-			# install required packages
+			# install required packages regardless VM types.
 			Debug_Msg "This is RHEL 7"
 			Debug_Msg "Installing required packages ..."
 			yum install -y kernel-devel-3.10.0-862.9.1.el7.x86_64 python-devel valgrind-devel
@@ -128,13 +140,16 @@ function Main() {
 			Debug_Msg "Restarting waagent service"
 			service waagent restart
 			;;
-		redhat_6|centos_6|redhat_8|centos_8|fedora*|ubuntu*)
-			LogMsg "WARNING: Not yet implemented in $DISTRO"
-			SetTestStateFailed
-			exit 0
+		suse*)
+			# install required packages
+			Debug_Msg "This is SUSE 15"
+			Debug_Msg "Installing required packages ..."
+			zypper install glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make
+			Verify_Result
+			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make"
 			;;
 		*)
-			msg="ERROR: Distro '$DISTRO' not supported"
+			msg="ERROR: Distro '$DISTRO' not supported or not implemented"
 			LogMsg "${msg}"
 			SetTestStateFailed
 			exit 0
@@ -199,21 +214,46 @@ function Main() {
 		export PATH=$PATH:/opt/ibm/platform_mpi/bin
 
 	elif [ $mpi_type -eq "intel"]; then
-		# Intel MPI installation
-		Debug_Msg="Intel MPI installation running ..."
-		srcblob=https://partnerpipelineshare.blob.core.windows.net/mpi/l_mpi_2018.3.222.tgz
+		# if HPC images comes with MPI binary pre-installed, (CentOS HPC) 
+		#	there is no action required except binay verification
+		mpirun_path=$(find / -name mpirun | grep intel64)		# $mpirun_path is not empty or null and file path should exists
+		if [ -f $mpirun_path && ! -z "$mpirun_path" ]; then
+			Debug_Msg "Found pre-installed mpirun binary"
 
-		Debug_Msg "Downloading Intel MPI source code"
-		wget $srcblob
+			# mostly IMB-MPI1 comes with mpirun binary, but verify its existence
+			Found_File "IMB-MPI1" "intel64"
+		# if this is HPC images with MPI installer rpm files, (SUSE HPC)
+		#	then it sould be install those rpm files
+		elif [ -d /opt/intelMPI ]; then
+			Debug_Msg "Found intelMPI directory. This has an installable rpm ready image"
+			Debug_Msg "Installing all rpm files in /opt/intelMPI/intel_mpi_packages/"
 
-		tar xvzf $(echo $srcblob | cut -d'/' -f5)
-		cd $(echo "${srcblob%.*}" | cut -d'/' -f5)
+			rpm -v -i --nodeps /opt/intelMPI/intel_mpi_packages/*.rpm
+			Verify_Result
 
-		Debug_Msg "Executing silient installation"
-		sed -i -e 's/ACCEPT_EULA=decline/ACCEPT_EULA=accept/g' silent.cfg 
-		./install.sh -s silent.cfg
-		Verify_Result
-		Debug_Msg "Completed Intel MPI installation"
+			Found_File "mprun" "intel64"
+			Found_File "IMB-MPI1" "intel64"
+		else
+			# none HPC image case, need to install Intel MPI
+			# Intel MPI installation of tarball file
+			Debug_Msg="Intel MPI installation running ..."
+			srcblob=https://partnerpipelineshare.blob.core.windows.net/mpi/l_mpi_2018.3.222.tgz
+
+			Debug_Msg "Downloading Intel MPI source code"
+			wget $srcblob
+
+			tar xvzf $(echo $srcblob | cut -d'/' -f5)
+			cd $(echo "${srcblob%.*}" | cut -d'/' -f5)
+
+			Debug_Msg "Executing silient installation"
+			sed -i -e 's/ACCEPT_EULA=decline/ACCEPT_EULA=accept/g' silent.cfg 
+			./install.sh -s silent.cfg
+			Verify_Result
+			Debug_Msg "Completed Intel MPI installation"
+
+			Found_File "mprun" "intel64"
+			Found_File "IMB-MPI1" "intel64"
+		fi
 
 		# set path string to verify IBM MPI binaries
 		target_bin=/opt/intel/compilers_and_libraries_$(echo "${srcblob%.*}" | cut -d'/' -f5 | cut -d'_' -f3)/linux/mpi/intel64/bin/mpirun
