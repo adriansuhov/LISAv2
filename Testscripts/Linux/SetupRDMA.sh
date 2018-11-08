@@ -213,7 +213,7 @@ function Main() {
 		# add IBM Platform MPI path to PATH
 		export PATH=$PATH:/opt/ibm/platform_mpi/bin
 
-	elif [ $mpi_type == "intel"]; then
+	elif [ $mpi_type == "intel" ]; then
 		# if HPC images comes with MPI binary pre-installed, (CentOS HPC) 
 		#	there is no action required except binay verification
 		mpirun_path=$(find / -name mpirun | grep intel64)		# $mpirun_path is not empty or null and file path should exists
@@ -342,7 +342,7 @@ function post_verification() {
 	# MPI hostname cmd for initial test
 	if [ $mpi_type == "ibm" ]; then
 		_res_hostname=$(/opt/ibm/platform_mpi/bin/mpirun -TCP -hostlist $_ipaddress:1 hostname)
-	elif [ $mpi_type -eq "intel"]; then
+	elif [ $mpi_type -eq "intel" ]; then
 		_res_hostname=$(mpirun --host $_ipaddress hostname)
 	else
 		_res_hostname=$(mpirun --allow-run-as-root -np 1 --host $_ipaddress hostname)
@@ -373,7 +373,7 @@ function post_verification() {
 			Debug_Msg "FAILED: Found zero ping_pong test result"
 		fi
 
-	elif [ $mpi_type -eq "intel"]; then
+	elif [ $mpi_type -eq "intel" ]; then
 		Debug_Msg "TBD: This is intel MPI and no verification defined yet"
 
 	else
