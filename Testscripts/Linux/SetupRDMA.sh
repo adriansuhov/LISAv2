@@ -144,7 +144,7 @@ function Main() {
 			# install required packages
 			Debug_Msg "This is SUSE 15"
 			Debug_Msg "Installing required packages ..."
-			zypper install glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make
+			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make
 			Verify_Result
 			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make"
 			;;
@@ -217,7 +217,7 @@ function Main() {
 		# if HPC images comes with MPI binary pre-installed, (CentOS HPC) 
 		#	there is no action required except binay verification
 		mpirun_path=$(find / -name mpirun | grep intel64)		# $mpirun_path is not empty or null and file path should exists
-		if [ -f $mpirun_path && ! -z "$mpirun_path" ]; then
+		if [[ -f $mpirun_path && ! -z "$mpirun_path" ]]; then
 			Debug_Msg "Found pre-installed mpirun binary"
 
 			# mostly IMB-MPI1 comes with mpirun binary, but verify its existence
@@ -256,13 +256,13 @@ function Main() {
 		fi
 
 		# set path string to verify IBM MPI binaries
-		target_bin=/opt/intel/compilers_and_libraries_$(echo "${srcblob%.*}" | cut -d'/' -f5 | cut -d'_' -f3)/linux/mpi/intel64/bin/mpirun
+		target_bin=$mpirun_path
 
 		# file validation
 		Verify_File $target_bin
 
 		# add Intel MPI path to PATH
-		export PATH=$PATH:/opt/intel/compilers_and_libraries_$(echo "${srcblob%.*}" | cut -d'/' -f5 | cut -d'_' -f3)/linux/mpi/intel64/bin
+		export PATH=$PATH:"${mpirun_path%/*}"
 
 	else 
 		# Open MPI installation
