@@ -213,7 +213,7 @@ function Main() {
 		# add IBM Platform MPI path to PATH
 		export PATH=$PATH:/opt/ibm/platform_mpi/bin
 
-	elif [ $mpi_type -eq "intel"]; then
+	elif [ $mpi_type == "intel"]; then
 		# if HPC images comes with MPI binary pre-installed, (CentOS HPC) 
 		#	there is no action required except binay verification
 		mpirun_path=$(find / -name mpirun | grep intel64)		# $mpirun_path is not empty or null and file path should exists
@@ -231,7 +231,9 @@ function Main() {
 			rpm -v -i --nodeps /opt/intelMPI/intel_mpi_packages/*.rpm
 			Verify_Result
 
-			Found_File "mprun" "intel64"
+			mpirun_path=$(find / -name mpirun | grep intel64)
+
+			Found_File "mpirun" "intel64"
 			Found_File "IMB-MPI1" "intel64"
 		else
 			# none HPC image case, need to install Intel MPI
@@ -251,15 +253,14 @@ function Main() {
 			Verify_Result
 			Debug_Msg "Completed Intel MPI installation"
 
-			Found_File "mprun" "intel64"
+			mpirun_path=$(find / -name mpirun | grep intel64)
+
+			Found_File "mpirun" "intel64"
 			Found_File "IMB-MPI1" "intel64"
 		fi
 
-		# set path string to verify IBM MPI binaries
-		target_bin=$mpirun_path
-
 		# file validation
-		Verify_File $target_bin
+		Verify_File $mpirun_path
 
 		# add Intel MPI path to PATH
 		export PATH=$PATH:"${mpirun_path%/*}"
