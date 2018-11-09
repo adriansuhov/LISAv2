@@ -144,7 +144,7 @@ function Main() {
 			# install required packages
 			Debug_Msg "This is SUSE 15"
 			Debug_Msg "Installing required packages ..."
-			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make
+			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++
 			Verify_Result
 			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make"
 			;;
@@ -275,7 +275,7 @@ function Main() {
 		Verify_Result
 
 		tar xvzf $(echo $srcblob | cut -d'/' -f5)
-		cd $(echo "${srcblob%.*}" | cut -d'/' -f5)
+		cd $(echo "${srcblob%.*}" | cut -d'/' -f5 | sed -n '/\.tar$/s///p')
 
 		Debug_Msg "Running configuration"
 		./configure --enable-mpirun-prefix-by-default
@@ -335,14 +335,14 @@ function post_verification() {
 
 	# Validate if the platform MPI binaries work in the system.
 	_hostname=$(cat /etc/hostname)
-	_ipaddress=$(hostname -I | awk '{print $1}')
+	_ipaddress=$(hostname -i | awk '{print $1}')
 	Debug_Msg "Found hostname from system - $_hostname"
 	Debug_Msg "Found _ipaddress from system - $_ipaddress"
 
 	# MPI hostname cmd for initial test
 	if [ $mpi_type == "ibm" ]; then
 		_res_hostname=$(/opt/ibm/platform_mpi/bin/mpirun -TCP -hostlist $_ipaddress:1 hostname)
-	elif [ $mpi_type -eq "intel" ]; then
+	elif [ $mpi_type == "intel" ]; then
 		_res_hostname=$(mpirun --host $_ipaddress hostname)
 	else
 		_res_hostname=$(mpirun --allow-run-as-root -np 1 --host $_ipaddress hostname)
@@ -373,9 +373,8 @@ function post_verification() {
 			Debug_Msg "FAILED: Found zero ping_pong test result"
 		fi
 
-	elif [ $mpi_type -eq "intel" ]; then
+	elif [ $mpi_type == "intel" ]; then
 		Debug_Msg "TBD: This is intel MPI and no verification defined yet"
-
 	else
 		Debug_Msg "TBD: This is Open MPI and no verification defined yet"
 	fi
