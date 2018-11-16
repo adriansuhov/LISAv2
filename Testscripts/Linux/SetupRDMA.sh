@@ -144,7 +144,7 @@ function Main() {
 			# install required packages
 			Debug_Msg "This is SUSE 15"
 			Debug_Msg "Installing required packages ..."
-			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++
+			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran net-tools-deprecated
 			Verify_Result
 			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make"
 			;;
