@@ -592,9 +592,9 @@ function Main() {
 		final_mpi_intranode_status=0
 
 		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path $non_shm_mpi_settings -np 2 --host $vm,$master $imb_mpi1_path pingpong"
+			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm,$master $imb_mpi1_path pingpong"
 			LogMsg "Checking IMB-MPI1 Intranode status in $vm"
-			ssh root@${vm} "$mpi_run_path $non_shm_mpi_settings -np 2 --host $vm,$master $imb_mpi1_path pingpong \
+			ssh root@${vm} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm,$master $imb_mpi1_path pingpong \
 			> IMB-MPI1-IntraNode-pingpong-output-$vm.txt"
 			mpi_intranode_status=$?
 			scp root@${vm}:IMB-MPI1-IntraNode-pingpong-output-$vm.txt .
@@ -620,9 +620,9 @@ function Main() {
 		final_mpi_internode_status=0
 
 		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path $non_shm_mpi_settings -np 2 --host $master,$vm $imb_mpi1_path pingpong"
+			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $master,$vm $imb_mpi1_path pingpong"
 			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path $non_shm_mpi_settings -np 2 --host $master,$vm $imb_mpi1_path pingpong \
+			$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $master,$vm $imb_mpi1_path pingpong \
 				>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
 			mpi_internode_status=$?
 			if [ $mpi_internode_status -eq 0 ]; then
@@ -648,15 +648,15 @@ function Main() {
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
 			if [[ $imb_mpi1_tests == "all" ]]; then
-				LogMsg "$mpi_run_path --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path"
+				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path"
 				LogMsg "IMB-MPI1 test iteration $attempt - Running."
-				$mpi_run_path --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path \
 					>IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 				mpi_status=$?
 			else
-				LogMsg "$mpi_run_path --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests"
+				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests"
 				LogMsg "IMB-MPI1 test iteration $attempt - Running."
-				$mpi_run_path --host $master,$slaves -n	$(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n	$(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests \
 					>IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 				mpi_status=$?
 			fi
@@ -690,15 +690,15 @@ function Main() {
 		imb_rma_final_status=0
 		for attempt in $total_attempts; do
 			if [[ $imb_rma_tests == "all" ]]; then
-				LogMsg "$mpi_run_path --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path"
+				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path"
 				LogMsg "IMB-RMA test iteration $attempt - Running."
-				$mpi_run_path --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path \
 					>IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
 				rma_status=$?
 			else
-				LogMsg "$mpi_run_path --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests"
+				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests"
 				LogMsg "IMB-RMA test iteration $attempt - Running."
-				$mpi_run_path --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests \
 					>IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
 				rma_status=$?
 			fi
@@ -731,15 +731,15 @@ function Main() {
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
 			if [[ $imb_nbc_tests == "all" ]]; then
-				LogMsg "$mpi_run_path --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
+				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
 				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
 					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 				nbc_status=$?
 			else
-				LogMsg "$mpi_run_path --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
+				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
 				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
 					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 				nbc_status=$?
 			fi
