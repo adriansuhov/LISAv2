@@ -463,42 +463,40 @@ function Main() {
 		#	- measure one-sided operations compliant with the MPI-3 standard
 		# TODO: find working parameters; Long Li said IMB-RMA may not work with IBM Platform MPI. Comment out for future work.
 		#
-		#
-		# total_attempts=$(seq 1 1 $imb_rma_tests_iterations)
-		# imb_rma_final_status=0
-		# for attempt in $total_attempts; do
-		# 	LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) \
-		#		$imb_rma_path $imb_rma_tests"
-		# 	LogMsg "IMB-RMA test iteration $attempt - Running."
+		
+		total_attempts=$(seq 1 1 $imb_rma_tests_iterations)
+		imb_rma_final_status=0
+		for attempt in $total_attempts; do
+			LogMsg "$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines))	$imb_rma_path $imb_rma_tests"
+			LogMsg "IMB-RMA test iteration $attempt - Running."
+			$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) $imb_rma_path $imb_rma_tests \
+				> IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
 
-		# 	$mpi_run_path -hostlist $master,$slaves -np $(($rma_ppn * $total_virtual_machines)) $imb_rma_path $imb_rma_tests \
-		#		> IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
+			rma_status=$?
 
-		# 	rma_status=$?
+			if [ $rma_status -eq 0 ]; then
+				LogMsg "IMB-RMA test iteration $attempt - Succeeded."
+				sleep 1
+			else
+				LogErr "IMB-RMA test iteration $attempt - Failed."
+				imb_rma_final_status=$(($imb_rma_final_status + $rma_status))
+				sleep 1
+			fi
+		done
 
-		# 	if [ $rma_status -eq 0 ]; then
-		# 		LogMsg "IMB-RMA test iteration $attempt - Succeeded."
-		# 		sleep 1
-		# 	else
-		# 		LogErr "IMB-RMA test iteration $attempt - Failed."
-		# 		imb_rma_final_status=$(($imb_rma_final_status + $rma_status))
-		# 		sleep 1
-		# 	fi
-		# done
+		if [ $imb_rma_tests_iterations -gt 5 ]; then
+			Compress_Files "IMB-RMA-AllNodes-output.tar.gz" "IMB-RMA-AllNodes-output-Attempt"
+		fi
 
-		# if [ $imb_rma_tests_iterations -gt 5 ]; then
-		# 	Compress_Files "IMB-RMA-AllNodes-output.tar.gz" "IMB-RMA-AllNodes-output-Attempt"
-		# fi
-
-		# if [ $imb_rma_final_status -ne 0 ]; then
-		# 	LogErr "IMB-RMA tests returned non-zero exit code. Aborting further tests."
-		# 	SetTestStateFailed
-		# 	Collect_Kernel_Logs_From_All_VMs
-		# 	LogErr "INFINIBAND_VERIFICATION_FAILED_RMA_ALLNODES"
-		# 	exit 0
-		# else
-		# 	LogMsg "INFINIBAND_VERIFICATION_SUCCESS_RMA_ALLNODES"
-		# fi
+		if [ $imb_rma_final_status -ne 0 ]; then
+			LogErr "IMB-RMA tests returned non-zero exit code. Aborting further tests."
+			SetTestStateFailed
+			Collect_Kernel_Logs_From_All_VMs
+			LogErr "INFINIBAND_VERIFICATION_FAILED_RMA_ALLNODES"
+			exit 0
+		else
+			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_RMA_ALLNODES"
+		fi
 
 		# Verify IBM IMB-NBC tests.
 		# Nonblocking collective (NBC) routines conform to 2 MPI-3 standards:
@@ -544,8 +542,7 @@ function Main() {
 		# This is only for debuging
 		imb_rma_final_status=0
 		imb_nbc_final_status=0
-		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status +\
-			 $imb_rma_final_status + $imb_nbc_final_status))
+		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
 		
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $ib_nic_status"
@@ -562,6 +559,7 @@ function Main() {
 		fi
 
 	else
+		# OPEN MPI execution
 		mpi_run_path=$(find / -name mpirun)
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
