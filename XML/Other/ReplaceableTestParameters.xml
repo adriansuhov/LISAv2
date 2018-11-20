@@ -81,7 +81,12 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS</ReplaceThis>
-        <ReplaceWith>--allow-run-as-root --mca btl self,vader,openib --mca btl_openib_cq_size 4096 -np 2</ReplaceWith>
+        <ReplaceWith>--allow-run-as-root --mca btl self,vader,tcp --mca btl_openib_cq_size 4096</ReplaceWith>
+    </Parameter>
+    <Parameter>
+    <!-- This is original parameter for IB-->
+        <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS_IB</ReplaceThis>
+        <ReplaceWith>--allow-run-as-root --mca btl self,vader,openib --mca btl_openib_cq_size 4096</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IB_NIC</ReplaceThis>
