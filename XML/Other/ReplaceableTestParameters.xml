@@ -73,11 +73,11 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS</ReplaceThis>
-        <ReplaceWith>-TCP -np2 -hostlist host1:1,host2:1</ReplaceWith>
+        <ReplaceWith>-TCP -np2</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS</ReplaceThis>
-        <ReplaceWith>--mca btl self,vader,tcp -np 2</ReplaceWith>
+        <ReplaceWith>--allow-run-as-root --mca btl self,vader,openib --mca btl_openib_cq_size 4096 -np 2</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IB_NIC</ReplaceThis>
@@ -97,11 +97,11 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_PPN</ReplaceThis>
-        <ReplaceWith>2</ReplaceWith>
+        <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_PPN</ReplaceThis>
-        <ReplaceWith>2</ReplaceWith>
+        <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_PPN</ReplaceThis>
