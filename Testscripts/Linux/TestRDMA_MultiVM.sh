@@ -137,7 +137,7 @@ function Main() {
 
 		for vm in $master $slaves_array; do
 			LogMsg "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $non_shm_mpi_settings $imb_mpi1_path pingpong"
-			LogMsg "Checking IMB-MPI1 Intranode status in $vm"
+			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
 			ssh root@${vm} "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $non_shm_mpi_settings $imb_mpi1_path pingpong \
 				> IMB-MPI1-IntraNode-pingpong-output-$vm.txt"
 			mpi_intranode_status=$?
@@ -364,7 +364,7 @@ function Main() {
 
 		for vm in $master $slaves_array; do
 			LogMsg "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_ping_pong_path 4096"
-			LogMsg "Checking IMB-MPI1 Intranode status in $vm"
+			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
 			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_ping_pong_path 4096 \
 				> IMB-MPI1-IntraNode-output-$vm.txt"
 			mpi_intranode_status=$?
@@ -372,9 +372,9 @@ function Main() {
 			scp root@${vm}:IMB-MPI1-IntraNode-output-$vm.txt .
 
 			if [ $mpi_intranode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 Intranode status in $vm - Succeeded."
+				LogMsg "IMB-MPI1 IntraNode status in $vm - Succeeded."
 			else
-				LogErr "IMB-MPI1 Intranode status in $vm - Failed"
+				LogErr "IMB-MPI1 IntraNode status in $vm - Failed"
 			fi
 			final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 		done
@@ -400,15 +400,15 @@ function Main() {
 			mpi_internode_status=$?
 
 			if [ $mpi_internode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
+				LogMsg "IMB-MPI1 InterNode status in $vm - Succeeded."
 			else
-				LogErr "IMB-MPI1 Internode status in $vm - Failed"
+				LogErr "IMB-MPI1 InterNode status in $vm - Failed"
 			fi
 			final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
 		done
 
 		if [ $final_mpi_internode_status -ne 0 ]; then
-			LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
+			LogErr "IMB-MPI1 InterNode test failed in somes VMs. Aborting further tests."
 			SetTestStateFailed
 			Collect_Kernel_Logs_From_All_VMs
 			LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
