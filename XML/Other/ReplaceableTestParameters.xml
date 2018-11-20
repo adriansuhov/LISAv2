@@ -73,7 +73,11 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS</ReplaceThis>
-        <ReplaceWith>-TCP -np2</ReplaceWith>
+        <ReplaceWith>-TCP</ReplaceWith>
+        <!--
+        <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS</ReplaceThis>
+        <ReplaceWith>-ibv -udapl -mxm</ReplaceWith>
+        -->
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS</ReplaceThis>
