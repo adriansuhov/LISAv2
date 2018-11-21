@@ -558,7 +558,8 @@ function Main() {
 
 	else
 		# OPEN MPI execution
-		mpi_run_path=$(find / -name mpirun)
+		# Need exclusive word intel if it runs in HPC image. Both will conflict.
+		mpi_run_path=$(find / -name mpirun | grep -v intel)
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
 		imb_mpi1_path=$(find / -name IMB-MPI1)
