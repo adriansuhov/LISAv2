@@ -562,13 +562,13 @@ function Main() {
 		mpi_run_path=$(find / -name mpirun | grep -v intel)
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
-		imb_mpi1_path=$(find / -name IMB-MPI1)
+		imb_mpi1_path=$(find / -name IMB-MPI1 | grep -v intel)
 		LogMsg "IMB-MPI1 Path: $imb_mpi1_path"
 		
-		imb_rma_path=$(find / -name IMB-RMA)
+		imb_rma_path=$(find / -name IMB-RMA | grep -v intel)
 		LogMsg "IMB-RMA Path: $imb_rma_path"
 		
-		imb_nbc_path=$(find / -name IMB-NBC)
+		imb_nbc_path=$(find / -name IMB-NBC | grep -v intel)
 		LogMsg "IMB-NBC Path: $imb_nbc_path"
 
 		#Verify PingPong Tests (IntraNode).
