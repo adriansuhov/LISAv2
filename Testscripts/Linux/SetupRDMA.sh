@@ -86,7 +86,7 @@ function Main() {
 	case $DISTRO in
 		redhat_7|centos_7)
 			# install required packages regardless VM types.
-			Debug_Msg "This is RHEL 7"
+			Debug_Msg "This is RHEL or CentOS"
 			Debug_Msg "Installing required packages ..."
 			yum install -y kernel-devel-3.10.0-862.9.1.el7.x86_64 python-devel valgrind-devel
 			Verify_Result
@@ -142,11 +142,14 @@ function Main() {
 			;;
 		suse*)
 			# install required packages
-			Debug_Msg "This is SUSE 15"
+			Debug_Msg "This is SUSE"
 			Debug_Msg "Installing required packages ..."
-			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran net-tools-deprecated
+			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran
 			Verify_Result
-			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make"
+			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran"
+			zypper install -y net-tools-deprecated
+			Verify_Result
+			Debug_Msg "Installed packages - net-tools-deprecated"
 			;;
 		*)
 			msg="ERROR: Distro '$DISTRO' not supported or not implemented"
