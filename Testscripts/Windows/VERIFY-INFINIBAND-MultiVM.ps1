@@ -198,7 +198,7 @@ function Main {
                 #region Check if $InfinibandNic got IP address
                 $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
                 $pattern = "INFINIBAND_VERIFICATION_SUCCESS_$InfinibandNic"
-                LogMsg "Analysing $logFileName"
+                LogMsg "Analyzing $logFileName"
                 $metaData = "InfiniBand-Verification-$Iteration-$TempName : $InfinibandNic IP"
                 $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
                 if ($SucessLogs.Count -eq 1) {
@@ -216,7 +216,7 @@ function Main {
                 #region Check MPI pingpong intranode tests
                 $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
                 $pattern = "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
-                LogMsg "Analysing $logFileName"
+                LogMsg "Analyzing $logFileName"
                 $metaData = "InfiniBand-Verification-$Iteration-$TempName : PingPong Intranode"
                 $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
                 if ($SucessLogs.Count -eq 1) {
@@ -234,7 +234,7 @@ function Main {
                 #region Check MPI pingpong internode tests
                 $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
                 $pattern = "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-                LogMsg "Analysing $logFileName"
+                LogMsg "Analyzing $logFileName"
                 $metaData = "InfiniBand-Verification-$Iteration-$TempName : PingPong Internode"
                 $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
                 if ($SucessLogs.Count -eq 1) {
@@ -253,7 +253,7 @@ function Main {
                 if ( $ImbMpiTestIterations -ge 1) {
                     $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
                     $pattern = "INFINIBAND_VERIFICATION_SUCCESS_MPI1_ALLNODES"
-                    LogMsg "Analysing $logFileName"
+                    LogMsg "Analyzing $logFileName"
                     $metaData = "InfiniBand-Verification-$Iteration-$TempName : IMB-MPI1"
                     $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
                     if ($SucessLogs.Count -eq 1) {
@@ -273,7 +273,7 @@ function Main {
                 if ( $ImbRmaTestIterations -ge 1) {
                     $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
                     $pattern = "INFINIBAND_VERIFICATION_SUCCESS_RMA_ALLNODES"
-                    LogMsg "Analysing $logFileName"
+                    LogMsg "Analyzing $logFileName"
                     $metaData = "InfiniBand-Verification-$Iteration-$TempName : IMB-RMA"
                     $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
                     if ($SucessLogs.Count -eq 1) {
@@ -292,8 +292,8 @@ function Main {
                 #region Check NBC all nodes tests
                 if ( $ImbNbcTestIterations -ge 1) {
                     $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
-                    $pattern = "INFINIBAND_VERIFICATION_SUCCESS_RMA_ALLNODES"
-                    LogMsg "Analysing $logFileName"
+                    $pattern = "INFINIBAND_VERIFICATION_SUCCESS_NBC_ALLNODES"
+                    LogMsg "Analyzing $logFileName"
                     $metaData = "InfiniBand-Verification-$Iteration-$TempName : IMB-NBC"
                     $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
                     if ($SucessLogs.Count -eq 1) {
