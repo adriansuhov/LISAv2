@@ -107,7 +107,7 @@ function Main {
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
         foreach ( $VMData in $AllVMData ) {
             RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
-                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 1200
+                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 1500
         }
         LogMsg "SetupRDMS is done"
 
