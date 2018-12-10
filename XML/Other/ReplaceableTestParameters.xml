@@ -68,30 +68,24 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
-        <!-- This INFINIBAND_INTEL_MPI_SETTINGS is for TCP or NetworkDirect -->
         <ReplaceThis>INFINIBAND_INTEL_MPI_SETTINGS</ReplaceThis>
         <ReplaceWith>-env I_MPI_DEBUG=2 -env I_MPI_FABRICS tcp</ReplaceWith>
     </Parameter>
-        <!-- This INFINIBAND_INTEL_MPI_SETTINGS is for IB
-        <ReplaceThis>INFINIBAND_INTEL_MPI_SETTINGS</ReplaceThis>
+        <ReplaceThis>INFINIBAND_INTEL_MPI_SETTINGS_IB</ReplaceThis>
         <ReplaceWith>-env I_MPI_FABRICS shm:dapl -env I_MPI_DAPL_PROVIDER=ofa-v2-ib0 -env SECS_PER_SAMPLE=600</ReplaceWith>
-        -->
-    <Parameter>
-        <!-- This INFINIBAND_INTEL_MPI_SETTINGS is for TCP or NetworkDirect -->
-        <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS</ReplaceThis>
-        <ReplaceWith>-TCP</ReplaceWith>
-        <!-- This INFINIBAND_INTEL_MPI_SETTINGS is for IB
-        <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS</ReplaceThis>
-        <ReplaceWith>-ibv -udapl -mxm</ReplaceWith>
-        -->
     </Parameter>
     <Parameter>
-        <!-- This INFINIBAND_INTEL_MPI_SETTINGS is for TCP or NetworkDirect -->
+        <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS</ReplaceThis>
+        <ReplaceWith>-TCP</ReplaceWith>
+    </Parameter>
+        <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS_IB</ReplaceThis>
+        <ReplaceWith>-ibv -udapl -mxm</ReplaceWith>
+    </Parameter>
+    <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS</ReplaceThis>
         <ReplaceWith>--mca btl self,vader,tcp --mca btl_openib_cq_size 4096</ReplaceWith>
     </Parameter>
     <Parameter>
-        <!-- This is original parameter for IB-->
         <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS_IB</ReplaceThis>
         <ReplaceWith>--mca btl self,vader,openib --mca btl_openib_cq_size 4096</ReplaceWith>
     </Parameter>
