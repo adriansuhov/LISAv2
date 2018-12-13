@@ -45,9 +45,9 @@ function Verify_File {
 	# Verify if the file exists or not. 
 	# The first parameter is absolute path
 	if [ -f $1 ]; then
-		echo "File not found $1"
+		Debug_Msg "File not found $1"
 	else
-		echo "File $1 found"
+		Debug_Msg "File $1 found"
 	fi
 }
 
@@ -57,15 +57,15 @@ function Found_File {
 	if [ -n $target_path ]; then
 		Debug_Msg "Verified $1 binary in $target_path successfully"
 	else
-		LogErr "Could not verify $1 binary in the system"
+		Debug_Msg "Could not verify $1 binary in the system"
 	fi
 }
 
 function Verify_Result {
 	if [ $? -eq 0 ]; then
-		echo OK
+		Debug_Msg "OK"
 	else
-		echo FAIL
+		Debug_Msg "FAIL"
 fi
 }
 
@@ -100,9 +100,9 @@ function Main() {
 			yum install -y iptables-devel libstdc++-devel libselinux-devel gcc elfutils-devel
 			Verify_Result
 			Debug_Msg "Installed packages - iptables-devel libstdc++-devel libselinux-devel gcc elfutils-devel"
-			yum install -y libtool libnl3-devel git java libstdc++.i686 dapl
+			yum install -y libtool libnl3-devel git java libstdc++.i686 dapl python-setuptools
 			Verify_Result
-			Debug_Msg "Installed packages - libtool libnl3-devel git java libstdc++.i686 dapl"
+			Debug_Msg "Installed packages - libtool libnl3-devel git java libstdc++.i686 dapl python-setuptools"
 			yum -y groupinstall "InfiniBand Support"
 			Verify_Result
 			Debug_Msg "Installed group packages for InfiniBand Support"
@@ -215,6 +215,60 @@ function Main() {
 
 		# add IBM Platform MPI path to PATH
 		export PATH=$PATH:/opt/ibm/platform_mpi/bin
+
+		# Install stable WALA agent and apply 3 patches
+		# This is customized part for RHEL 7.5 Standard_HB60rs
+		cd
+
+		Debug_Msg "Download WALA agent repo"
+		git clone https://github.com/Azure/WALinuxAgent.git
+		Verify_Result
+
+		cd WALinuxAgent
+		
+		Debug_Msg "Download 1365.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1365.patch
+		Verify_Result
+		
+		Debug_Msg "Download 1375.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1375.patch
+		Verify_Result
+		
+		Debug_Msg "Download 1389.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1389.patch
+		Verify_Result
+		
+		Debug_Msg "Reset to commit 72b643ea93e5258c3cec0e778017936806111f15"
+		git reset --hard 72b643ea93e5258c3cec0e778017936806111f15
+		Verify_Result
+
+		Debug_Msg "Apply 1365 patch"
+		git am 1365.patch
+		Verify_Result
+		
+		Debug_Msg "Apply 1375 patch"
+		git am 1375.patch
+		Verify_Result
+		
+		Debug_Msg "Apply 1389 patch"
+		git am 1389.patch
+		Verify_Result
+		
+		Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
+		sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
+		Verify_Result
+
+		Debug_Msg "Disable AutoUpdate parameter in waagent.config"
+		sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
+		Verify_Result
+		
+		Debug_Msg "Compile WALA"
+		python setup.py install --register-service  --force
+		Verify_Result
+
+		Debug_Msg "Restart waagent service"
+		service waagent restart
+		Verify_Result
 
 	elif [ $mpi_type == "intel" ]; then
 		# if HPC images comes with MPI binary pre-installed, (CentOS HPC) 
