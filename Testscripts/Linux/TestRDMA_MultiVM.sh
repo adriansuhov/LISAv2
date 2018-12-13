@@ -343,15 +343,15 @@ function Main() {
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
 		# IMB-MPI1 location
-		imb_mpi1_path=$(find / -name IMB-MPI1)
+		imb_mpi1_path=$(find / -name IMB-MPI1 | grep -i root)
 		LogMsg "IMB-MPI1 Path: $imb_mpi1_path"
 		
 		# IMB-RMA location
-		imb_rma_path=$(find / -name IMB-RMA)
+		imb_rma_path=$(find / -name IMB-RMA | grep -i root)
 		LogMsg "IMB-RMA Path: $imb_rma_path"
 		
 		# IMB-NBC location
-		imb_nbc_path=$(find / -name IMB-NBC)
+		imb_nbc_path=$(find / -name IMB-NBC | grep -i root)
 		LogMsg "IMB-NBC Path: $imb_nbc_path"
 
 		# ping_pong binary in help directory
@@ -363,9 +363,9 @@ function Main() {
 		final_mpi_intranode_status=0
 
 		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_ping_pong_path 4096"
+			LogMsg "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
 			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
-			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_ping_pong_path 4096 \
+			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
 				> IMB-MPI1-IntraNode-output-$vm.txt"
 			mpi_intranode_status=$?
 
@@ -393,9 +393,9 @@ function Main() {
 		final_mpi_internode_status=0
 
 		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_ping_pong_path 4096"
+			LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
 			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path -hostlist $master:1,$vm:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_ping_pong_path 4096 \
+			$mpi_run_path -hostlist $master:1,$vm:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
 				> IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
 			mpi_internode_status=$?
 
