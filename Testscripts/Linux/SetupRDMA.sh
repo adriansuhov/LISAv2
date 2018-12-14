@@ -196,15 +196,20 @@ function Main() {
 		Debug_Msg "Completed IBM Platform MPI installation"
 
 		#Find the correct partition key for IB communicating with other VM
-		cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0 > firstkey
-		cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1 > secondkey
+		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
+		Debug_Msg "Getting the first key $firstkey"
+		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
+		Debug_Msg "Getting the second key $secondkey"
 
 		# Assign the bigger number to MPI_IB_PKEY
 		if [ $((firstkey - secondkey)) -gt 0 ]; then 
 			export MPI_IB_PKEY=$firstkey
+			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
 		else
 			export MPI_IB_PKEY=$secondkey
+			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
 		fi
+		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
 
 		# set path string to verify IBM MPI binaries
 		target_bin=/opt/ibm/platform_mpi/bin/mpirun
