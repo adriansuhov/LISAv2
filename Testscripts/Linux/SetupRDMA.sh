@@ -44,10 +44,10 @@ function Debug_Msg {
 function Verify_File {
 	# Verify if the file exists or not. 
 	# The first parameter is absolute path
-	if [ -f $1 ]; then
-		Debug_Msg "File not found $1"
+	if [ -e $1 ]; then
+		Debug_Msg "File found $1"
 	else
-		Debug_Msg "File $1 found"
+		Debug_Msg "File not found $1"
 	fi
 }
 
@@ -199,12 +199,12 @@ function Main() {
 		cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0 > firstkey
 		cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1 > secondkey
 
+		# Assign the bigger number to MPI_IB_PKEY
 		if [ $((firstkey - secondkey)) -gt 0 ]; then 
 			export MPI_IB_PKEY=$firstkey
 		else
 			export MPI_IB_PKEY=$secondkey
 		fi
-
 
 		# set path string to verify IBM MPI binaries
 		target_bin=/opt/ibm/platform_mpi/bin/mpirun
