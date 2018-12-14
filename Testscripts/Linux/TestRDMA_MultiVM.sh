@@ -421,9 +421,9 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests allreduce"
+			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path $imb_mpi1_tests allreduce"
 			LogMsg "IMB-MPI1 test iteration $attempt - Running."
-			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * $total_virtual_machines)) $imb_mpi1_path $imb_mpi1_tests allreduce \
+			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path $imb_mpi1_tests allreduce \
 				> IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 			mpi_status=$?
 			
@@ -507,9 +507,9 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests"
+			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
 			LogMsg "IMB-NBC test iteration $attempt - Running."
-			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * $total_virtual_machines)) $imb_nbc_path $imb_nbc_tests \
+			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
 				> IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 			nbc_status=$?
 		
