@@ -93,7 +93,7 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IB_NIC</ReplaceThis>
-        <ReplaceWith>ib0</ReplaceWith>
+        <ReplaceWith>eth0</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_MPI_TESTNAMES</ReplaceThis>
