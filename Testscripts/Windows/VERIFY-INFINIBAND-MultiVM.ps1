@@ -107,7 +107,7 @@ function Main {
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
         foreach ( $VMData in $AllVMData ) {
             RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
-                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 1600  # Increased from 1200 to 1600 for HB60rs size VM
+                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 3400  # Increased from 1600 to 3400 for MLX OFED driver install
         }
         LogMsg "SetupRDMS is done"
 

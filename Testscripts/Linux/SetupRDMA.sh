@@ -106,12 +106,41 @@ function Main() {
 			yum -y groupinstall "InfiniBand Support"
 			Verify_Result
 			Debug_Msg "Installed group packages for InfiniBand Support"
+			yum -y install gtk2 atk cairo tcl tk createrepo
+			Verify_Result
+			Debug_Msg "Installed gtk2 atk cairo tcl tk createrepo"
+			
 			Debug_Msg "Completed the required packages installation"
 
 			Debug_Msg "Enabling rdma service"
 			systemctl enable rdma
 			Verify_Result
 			Debug_Msg "Enabled rdma service"
+
+			# This is required for new HPC VM HB- and HC- size deployment, Dec/2018
+			cd
+
+			Debug_Msg "Installing MLX driver"
+			wget http://content.mellanox.com/ofed/MLNX_OFED-4.5-1.0.1.0/MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz
+			Verify_Result
+			Debug_Msg "Downloaded MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz"
+
+			tar zxvf MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz
+			Verify_Result
+			Debug_Msg "Untar MLX driver tar ball file"
+			
+			./MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64/mlnxofedinstall --add-kernel-support
+			Verify_Result
+			Debug_Msg "installed MLX OFED driver with kernel support modules"
+
+			# Restart IB driver after enabling the eIPoIB Driver
+			sed -i -e 's/LOAD_EIPOIB=no/LOAD_EIPOIB=yes/g' /etc/infiniband/openib.conf
+			Verify_Result ""
+			Debug_Msg "Configured openib.conf file"
+
+			/etc/init.d/openibd restart
+			Verify_Result
+			Debug_Msg "Restarted Open IB Driver"
 
 			# remove or disable firewall and selinux services, if needed
 			Debug_Msg "Disabling Firewall and SELinux services"
@@ -131,12 +160,6 @@ function Main() {
 			# enable OS.EnableRDMA=y in waagent.conf
 			Debug_Msg "Changing waagent conf file"
 			sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' /etc/waagent.conf ### TODO find the bug.
-			# update walaagent in latest version. TODO: may not need now.
-			# Debug_Msg "Cloning WALinuxAgent repo"
-			# git clone https://github.com/Azure/WALinuxAgent.git
-			# cd WALinuxAgent
-			# Debug_Msg "Installing waagent and register the service" ### TODO: verify the installation in plain RHE. it failed with python packages
-			# python setup.py install --register-service
 			Debug_Msg "Restarting waagent service"
 			service waagent restart
 			;;
@@ -151,6 +174,7 @@ function Main() {
 			Verify_Result
 			Debug_Msg "Installed packages - net-tools-deprecated"
 			;;
+			# Need to find alternative MLX driver package installation
 		*)
 			msg="ERROR: Distro '$DISTRO' not supported or not implemented"
 			LogMsg "${msg}"
