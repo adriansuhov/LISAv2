@@ -109,7 +109,11 @@ function Main() {
 			yum -y install gtk2 atk cairo tcl tk createrepo
 			Verify_Result
 			Debug_Msg "Installed gtk2 atk cairo tcl tk createrepo"
-			
+			# this is required for specific MLX driver installation 
+			yum -y install kernel-devel-3.10.0-862.11.6.el7.x86_64
+			Verify_Result
+			Debug_Msg "Installed kernel-devel-3.10.0-862.11.6.el7.x86_64"
+
 			Debug_Msg "Completed the required packages installation"
 
 			Debug_Msg "Enabling rdma service"
@@ -120,24 +124,33 @@ function Main() {
 			# This is required for new HPC VM HB- and HC- size deployment, Dec/2018
 			cd
 
-			Debug_Msg "Installing MLX driver"
+			Debug_Msg "Downloading MLX driver"
 			wget http://content.mellanox.com/ofed/MLNX_OFED-4.5-1.0.1.0/MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz
 			Verify_Result
 			Debug_Msg "Downloaded MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz"
 
+			Debug_Msg "Opening MLX OFED driver tar ball file"
 			tar zxvf MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz
 			Verify_Result
 			Debug_Msg "Untar MLX driver tar ball file"
 			
+			Debug_Msg "Installing MLX OFED driver"
 			./MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64/mlnxofedinstall --add-kernel-support
 			Verify_Result
-			Debug_Msg "installed MLX OFED driver with kernel support modules"
+			Debug_Msg "Installed MLX OFED driver with kernel support modules"
 
 			# Restart IB driver after enabling the eIPoIB Driver
+			Debug_Msg "Changing LOAD_EIPOIB to yes"
 			sed -i -e 's/LOAD_EIPOIB=no/LOAD_EIPOIB=yes/g' /etc/infiniband/openib.conf
-			Verify_Result ""
+			Verify_Result
 			Debug_Msg "Configured openib.conf file"
 
+			Debug_Msg "Unloading ib_isert rpcrdma ib_Srpt services"
+			modprobe -rv ib_isert rpcrdma ib_srpt
+			Verify_Result
+			Debug_Msg "Removed ib_isert rpcrdma ib_srpt services"
+
+			Debug_Msg "Restarting openibd service"
 			/etc/init.d/openibd restart
 			Verify_Result
 			Debug_Msg "Restarted Open IB Driver"

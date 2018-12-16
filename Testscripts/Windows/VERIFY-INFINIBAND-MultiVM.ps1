@@ -107,7 +107,7 @@ function Main {
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
         foreach ( $VMData in $AllVMData ) {
             RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
-                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 3400  # Increased from 1600 to 3400 for MLX OFED driver install
+                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 4600  # Increased from 3400 to 4600 for another RHEL 7.5 kernel compilation
         }
         LogMsg "SetupRDMS is done"
 
