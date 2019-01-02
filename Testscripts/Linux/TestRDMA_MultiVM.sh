@@ -136,9 +136,9 @@ function Main() {
 		final_mpi_intranode_status=0
 
 		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $non_shm_mpi_settings $imb_mpi1_path pingpong"
+			LogMsg "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong"
 			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
-			ssh root@${vm} "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $non_shm_mpi_settings $imb_mpi1_path pingpong \
+			ssh root@${vm} "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong \
 				> IMB-MPI1-IntraNode-pingpong-output-$vm.txt"
 			mpi_intranode_status=$?
 			scp root@${vm}:IMB-MPI1-IntraNode-pingpong-output-$vm.txt .
@@ -164,9 +164,9 @@ function Main() {
 		final_mpi_internode_status=0
 
 		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $non_shm_mpi_settings $imb_mpi1_path pingpong"
+			LogMsg "$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong"
 			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $non_shm_mpi_settings $imb_mpi1_path pingpong \
+			$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong \
 				>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
 			mpi_internode_status=$?
 			if [ $mpi_internode_status -eq 0 ]; then
@@ -363,9 +363,9 @@ function Main() {
 		final_mpi_intranode_status=0
 
 		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
+			LogMsg "$mpi_run_path -hostlist $vm:1,$master:1 -np $mpi1_ppn -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
 			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
-			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np $(($mpi1_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
+			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np $mpi1_ppn -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
 				> IMB-MPI1-IntraNode-output-$vm.txt"
 			mpi_intranode_status=$?
 
@@ -393,9 +393,9 @@ function Main() {
 		final_mpi_internode_status=0
 
 		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np $(($mpi1_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
+			LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np $mpi1_ppn -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
 			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path -hostlist $master:1,$vm:1 -np $(($mpi1_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
+			$mpi_run_path -hostlist $master:1,$vm:1 -np $mpi1_ppn -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
 				> IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
 			mpi_internode_status=$?
 
@@ -421,9 +421,9 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path $imb_mpi1_tests allreduce"
+			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path $imb_mpi1_tests allreduce"
 			LogMsg "IMB-MPI1 test iteration $attempt - Running."
-			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path $imb_mpi1_tests allreduce \
+			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($mpi1_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path $imb_mpi1_tests allreduce \
 				> IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 			mpi_status=$?
 			
@@ -507,9 +507,9 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
+			LogMsg "$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
 			LogMsg "IMB-NBC test iteration $attempt - Running."
-			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * 2)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
+			$mpi_run_path -hostlist $master:1,$slaves:1 -np $(($nbc_ppn * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
 				> IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 			nbc_status=$?
 		
@@ -575,9 +575,9 @@ function Main() {
 		final_mpi_intranode_status=0
 
 		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $(($mpi1_ppn * $total_virtual_machines)) --host $vm,$master $imb_mpi1_path pingpong"
+			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $vm,$master $imb_mpi1_path pingpong"
 			LogMsg "Checking IMB-MPI1 Intranode status in $vm"
-			ssh root@${vm} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $(($mpi1_ppn * $total_virtual_machines)) --host $vm,$master $imb_mpi1_path pingpong \
+			ssh root@${vm} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $vm,$master $imb_mpi1_path pingpong \
 				> IMB-MPI1-IntraNode-pingpong-output-$vm.txt"
 			mpi_intranode_status=$?
 			scp root@${vm}:IMB-MPI1-IntraNode-pingpong-output-$vm.txt .
@@ -603,9 +603,9 @@ function Main() {
 		final_mpi_internode_status=0
 
 		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $(($mpi1_ppn * $total_virtual_machines)) --host $master,$vm $imb_mpi1_path pingpong"
+			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong"
 			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $(($mpi1_ppn * $total_virtual_machines)) --host $master,$vm $imb_mpi1_path pingpong \
+			$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong \
 				>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
 			mpi_internode_status=$?
 			if [ $mpi_internode_status -eq 0 ]; then

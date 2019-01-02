@@ -109,15 +109,15 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_PPN</ReplaceThis>
-        <ReplaceWith>1</ReplaceWith>
+        <ReplaceWith>2</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_PPN</ReplaceThis>
-        <ReplaceWith>1</ReplaceWith>
+        <ReplaceWith>2</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_PPN</ReplaceThis>
-        <ReplaceWith>1</ReplaceWith>
+        <ReplaceWith>2</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_MPI_TEST_COUNT</ReplaceThis>
