@@ -559,16 +559,16 @@ function Main() {
 	else
 		# OPEN MPI execution
 		# Need exclusive word intel if it runs in HPC image. Both will conflict.
-		mpi_run_path=$(find / -name mpirun | grep -v intel)
+		mpi_run_path=$(find / -name mpirun | head -n 1)
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
-		imb_mpi1_path=$(find / -name IMB-MPI1 | grep -v intel)
+		imb_mpi1_path=$(find / -name IMB-MPI1 | head -n 1)
 		LogMsg "IMB-MPI1 Path: $imb_mpi1_path"
 		
-		imb_rma_path=$(find / -name IMB-RMA | grep -v intel)
+		imb_rma_path=$(find / -name IMB-RMA | head -n 1)
 		LogMsg "IMB-RMA Path: $imb_rma_path"
 		
-		imb_nbc_path=$(find / -name IMB-NBC | grep -v intel)
+		imb_nbc_path=$(find / -name IMB-NBC | head -n 1)
 		LogMsg "IMB-NBC Path: $imb_nbc_path"
 
 		#Verify PingPong Tests (IntraNode).
