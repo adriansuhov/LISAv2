@@ -375,6 +375,77 @@ function Main() {
 		# add Intel MPI path to PATH
 		export PATH=$PATH:"${mpirun_path%/*}"
 
+		Debug_Msg "Completed Intel MPI installation"
+
+		#Find the correct partition key for IB communicating with other VM
+		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
+		Debug_Msg "Getting the first key $firstkey"
+		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
+		Debug_Msg "Getting the second key $secondkey"
+
+		# Assign the bigger number to MPI_IB_PKEY
+		if [ $((firstkey - secondkey)) -gt 0 ]; then 
+			export MPI_IB_PKEY=$firstkey
+			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
+		else
+			export MPI_IB_PKEY=$secondkey
+			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
+		fi
+		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
+
+		# Install stable WALA agent and apply 3 patches
+		# This is customized part for RHEL 7.5 Standard_HB60rs
+		cd
+
+		Debug_Msg "Download WALA agent repo"
+		git clone https://github.com/Azure/WALinuxAgent.git
+		Verify_Result
+
+		cd WALinuxAgent
+		
+		Debug_Msg "Download 1365.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1365.patch
+		Verify_Result
+		
+		Debug_Msg "Download 1375.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1375.patch
+		Verify_Result
+		
+		Debug_Msg "Download 1389.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1389.patch
+		Verify_Result
+		
+		Debug_Msg "Reset to commit 72b643ea93e5258c3cec0e778017936806111f15"
+		git reset --hard 72b643ea93e5258c3cec0e778017936806111f15
+		Verify_Result
+
+		Debug_Msg "Apply 1365 patch"
+		git am 1365.patch
+		Verify_Result
+		
+		Debug_Msg "Apply 1375 patch"
+		git am 1375.patch
+		Verify_Result
+		
+		Debug_Msg "Apply 1389 patch"
+		git am 1389.patch
+		Verify_Result
+		
+		Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
+		sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
+		Verify_Result
+
+		Debug_Msg "Disable AutoUpdate parameter in waagent.config"
+		sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
+		Verify_Result
+		
+		Debug_Msg "Compile WALA"
+		python setup.py install --register-service  --force
+		Verify_Result
+
+		Debug_Msg "Restart waagent service"
+		service waagent restart
+		Verify_Result
 	else 
 		# Open MPI installation
 		Debug_Msg "Open MPI installation running ..."
@@ -411,6 +482,78 @@ function Main() {
 
 		# file validation
 		Verify_File $target_bin
+		Debug_Msg "Completed Open MPI installation"
+
+		#Find the correct partition key for IB communicating with other VM
+		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
+		Debug_Msg "Getting the first key $firstkey"
+		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
+		Debug_Msg "Getting the second key $secondkey"
+
+		# Assign the bigger number to MPI_IB_PKEY
+		# Open MPI is not used this PKEY but leave it as-record for future use.
+		if [ $((firstkey - secondkey)) -gt 0 ]; then 
+			export MPI_IB_PKEY=$firstkey
+			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
+		else
+			export MPI_IB_PKEY=$secondkey
+			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
+		fi
+		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
+
+		# Install stable WALA agent and apply 3 patches
+		# This is customized part for RHEL 7.5 Standard_HB60rs
+		cd
+
+		Debug_Msg "Download WALA agent repo"
+		git clone https://github.com/Azure/WALinuxAgent.git
+		Verify_Result
+
+		cd WALinuxAgent
+		
+		Debug_Msg "Download 1365.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1365.patch
+		Verify_Result
+		
+		Debug_Msg "Download 1375.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1375.patch
+		Verify_Result
+		
+		Debug_Msg "Download 1389.patch"
+		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1389.patch
+		Verify_Result
+		
+		Debug_Msg "Reset to commit 72b643ea93e5258c3cec0e778017936806111f15"
+		git reset --hard 72b643ea93e5258c3cec0e778017936806111f15
+		Verify_Result
+
+		Debug_Msg "Apply 1365 patch"
+		git am 1365.patch
+		Verify_Result
+		
+		Debug_Msg "Apply 1375 patch"
+		git am 1375.patch
+		Verify_Result
+		
+		Debug_Msg "Apply 1389 patch"
+		git am 1389.patch
+		Verify_Result
+		
+		Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
+		sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
+		Verify_Result
+
+		Debug_Msg "Disable AutoUpdate parameter in waagent.config"
+		sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
+		Verify_Result
+		
+		Debug_Msg "Compile WALA"
+		python setup.py install --register-service  --force
+		Verify_Result
+
+		Debug_Msg "Restart waagent service"
+		service waagent restart
+		Verify_Result
 	fi
 	
 	cd ~
