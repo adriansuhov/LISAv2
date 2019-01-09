@@ -339,7 +339,7 @@ function Main() {
 		#				EXT, IO, NBC, and RMA values.
 
 		# mpirun binary location
-		mpi_run_path=$(find / -name mpirun | head -n 1)
+		mpi_run_path=$(find / -name mpirun | grep -i ibm | grep -v ia)
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
 		# IMB-MPI1 location
@@ -362,21 +362,29 @@ function Main() {
 		# Verify IBM PingPong Tests (IntraNode).
 		final_mpi_intranode_status=0
 
-		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path -hostlist $vm:1,$master:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
-			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
-			ssh root@${vm} "$mpi_run_path -hostlist $vm:1,$master:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
-				> IMB-MPI1-IntraNode-output-$vm.txt"
-			mpi_intranode_status=$?
-
-			scp root@${vm}:IMB-MPI1-IntraNode-output-$vm.txt .
-
-			if [ $mpi_intranode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 IntraNode status in $vm - Succeeded."
-			else
-				LogErr "IMB-MPI1 IntraNode status in $vm - Failed"
+		# Ping_Pong test runs from all to all VM and find the bad node.
+		for vm1 in $master $slaves_array; do
+			# Manual running needs to clean up the old log files.
+			if [ -f ./IMB-MPI1-IntraNode-output-$vm1.txt ]; then
+				rm -f ./IMB-MPI1-IntraNode-output-$vm1*.txt
+				LogMsg "Removed the old log files"
 			fi
-			final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
+			for vm2 in $master $slaves_array; do
+				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
+				LogMsg "$mpi_run_path -hostlist $vm1:1,$vm2:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
+				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
+				ssh root@${vm1} "$mpi_run_path -hostlist $vm1:1,$vm2:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 >> $log_file"
+				mpi_intranode_status=$?
+
+				scp root@${vm1}:$log_file .
+
+				if [ $mpi_intranode_status -eq 0 ]; then
+					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+				else
+					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+				fi
+				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
+			done
 		done
 
 		if [ $final_mpi_intranode_status -ne 0 ]; then
@@ -389,33 +397,33 @@ function Main() {
 			LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
 		fi
 
-		# Verify IBM PingPong Tests (InterNode).
-		final_mpi_internode_status=0
+		# # Verify IBM PingPong Tests (InterNode).
+		# final_mpi_internode_status=0
 
-		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
-			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path -hostlist $master:1,$vm:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
-				> IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
-			mpi_internode_status=$?
+		# for vm in $slaves_array; do
+		# 	LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
+		# 	LogMsg "Checking IMB-MPI1 InterNode status in $vm"
+		# 	$mpi_run_path -hostlist $master:1,$vm:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
+		# 		> IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
+		# 	mpi_internode_status=$?
 
-			if [ $mpi_internode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 InterNode status in $vm - Succeeded."
-			else
-				LogErr "IMB-MPI1 InterNode status in $vm - Failed"
-			fi
-			final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
-		done
+		# 	if [ $mpi_internode_status -eq 0 ]; then
+		# 		LogMsg "IMB-MPI1 InterNode status in $vm - Succeeded."
+		# 	else
+		# 		LogErr "IMB-MPI1 InterNode status in $vm - Failed"
+		# 	fi
+		# 	final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
+		# done
 
-		if [ $final_mpi_internode_status -ne 0 ]; then
-			LogErr "IMB-MPI1 InterNode test failed in somes VMs. Aborting further tests."
-			SetTestStateFailed
-			Collect_Kernel_Logs_From_All_VMs
-			LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
-			exit 0
-		else
-			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-		fi
+		# if [ $final_mpi_internode_status -ne 0 ]; then
+		# 	LogErr "IMB-MPI1 InterNode test failed in somes VMs. Aborting further tests."
+		# 	SetTestStateFailed
+		# 	Collect_Kernel_Logs_From_All_VMs
+		# 	LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
+		# 	exit 0
+		# else
+		# 	LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
+		# fi
 
 		# Verify IBM IMB-MPI1 tests.
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
@@ -542,12 +550,12 @@ function Main() {
 		Collect_Kernel_Logs_From_All_VMs
 
 		# finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
-		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_nbc_final_status))
+		finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_nbc_final_status))
 		
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $ib_nic_status"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
-			LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
+			# LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
 			# LogMsg "imb_rma_final_status: $imb_rma_final_status"
 			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
