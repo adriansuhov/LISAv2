@@ -267,7 +267,9 @@ function Main() {
 		Verify_File $ping_pong_bin
 
 		# add IBM Platform MPI path to PATH
-		export PATH=$PATH:/opt/ibm/platform_mpi/bin
+		export MPI_ROOT=/opt/ibm/platform_mpi
+		export PATH=$PATH:$MPI_ROOT
+		export PATH=$PATH:$MPI_ROOT/bin
 
 		# Install stable WALA agent and apply 3 patches
 		# This is customized part for RHEL 7.5 Standard_HB60rs
