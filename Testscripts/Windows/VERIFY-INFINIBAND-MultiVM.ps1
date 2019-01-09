@@ -39,6 +39,8 @@ function Main {
             LogMsg "Waiting 5 minutes to finish RDMA update for NC series VMs."
             Start-Sleep -Seconds 300
         }
+        $VM_Size = $ServerVMData.InstanceSize -replace "[^0-9]",''
+        LogMsg "Getting VM instance size: $VM_Size"
         #region CONFIGURE VMs for TEST
 
         LogMsg "SERVER VM details :"
@@ -87,6 +89,9 @@ function Main {
 
         Add-Content -Value "slaves=`"$SlaveInternalIPs`"" -Path $constantsFile
         LogMsg "slaves=$SlaveInternalIPs added to constansts.sh"
+
+        Add-Content -Value "VM_Size=`"$VM_Size`"" -Path $constantsFile
+        LogMsg "VM_Size=$VM_Size added to constansts.sh"
 
         LogMsg "constanst.sh created successfully..."
         #endregion
