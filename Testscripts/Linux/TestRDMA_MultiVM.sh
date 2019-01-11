@@ -139,6 +139,30 @@ function Main() {
 		LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_PORTSTATE"
 	fi
 	
+	# Verify if SetupRDMA completed all steps or not
+	# IF completed successfully, constants.sh has setup_completed=0 
+	setup_state_cnt=0
+	for vm in $master $slaves_array; do
+		setup_result=$(ssh root@${vm} "cat /root/constants.sh | grep -i setup_completed")
+		setup_result=$(echo $setup_result | cut -d '=' -f 2)
+		if [ "$setup_result" == "0" ]; then 
+			LogMsg "$vm RDMA setup - Succeeded; $setup_result"
+		else
+			LogErr "$vm RDMA setup - Failed; $setup_result"
+			setup_state_cnt=$(($setup_state_cnt + 1))
+		fi 
+	done
+	
+	if [ $setup_state_cnt -ne 0 ]; then
+		LogErr "IMB-MPI1 SetupRDMA state check failed in $setup_state_cnt VMs. Aborting further tests."
+		SetTestStateFailed
+		Collect_Kernel_Logs_From_All_VMs
+		LogMsg "INFINIBAND_VERIFICATION_FAILED_MPI1_SETUPSTATE"
+		exit 0
+	else
+		LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_SETUPSTATE"
+	fi
+
 	## Verify Intel MPI Tests
 	non_shm_mpi_settings=$(echo $mpi_settings | sed 's/shm://')
 

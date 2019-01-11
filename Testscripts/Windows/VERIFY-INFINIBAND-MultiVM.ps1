@@ -108,12 +108,26 @@ function Main {
         $TotalSuccessCount = 0
         $Iteration = 0
 
+        # How to manage multiple job id?
+        # what if any of jobs are infinitive loop? timer? what is different from waitfor?
+        # $testJob = RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
+        #        -password $password "/root/SetupRDMA.sh" -RunInBackground
+
+        # #region MONITOR TEST
+        # while ((Get-Job -Id $testJob).State -eq "Running") {
+        #     LogMsg "Current SetupRDMA Status : Running"
+        #     WaitFor -seconds 60
+        # }
+
         LogMsg "SetupRDMS is called"
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
         foreach ( $VMData in $AllVMData ) {
             RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
-                -password $password "/root/SetupRDMA.sh" -runMaxAllowedTime 4600  # Increased from 3400 to 4600 for another RHEL 7.5 kernel compilation
+                -password $password "/root/SetupRDMA.sh" -RunInBackground
+            WaitFor -seconds 2
         }
+        LogMsg "SetupRDMA background jobs started at $date. Waiting for 4500 seconds"
+        Start-Sleep -Seconds 4500
         LogMsg "SetupRDMS is done"
 
         # Reboot VM to apply RDMA changes
