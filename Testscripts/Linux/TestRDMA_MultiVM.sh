@@ -114,6 +114,31 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_${ib_nic}"
 	fi
 
+	# ibv_devinfo verifies PORT STATE
+	# PORT_ACTIVE (4) is expected. If PORT_DOWN (1), it fails
+	ib_port_state_down_cnt=0
+
+	for vm in $master $slaves_array; do
+		port_state=$(ssh root@${vm} "ibv_devinfo | grep -i state")
+		port_state=$(echo $port_state | cut -d ' ' -f2)
+		if [ "$port_state" == "PORT_ACTIVE" ]; then 
+			LogMsg "$vm ib port is up - Succeeded; $port_state"
+		else
+			LogErr "$vm ib port is down - Failed; $port_state"
+			ib_port_state_down_cnt=$(($ib_port_state_down_cnt + 1))
+		fi
+	done
+
+	if [ $ib_port_state_down_cnt -ne 0 ]; then
+		LogErr "IMB-MPI1 ib port state check failed in $ib_port_state_down_cnt VMs. Aborting further tests."
+		SetTestStateFailed
+		Collect_Kernel_Logs_From_All_VMs
+		LogMsg "INFINIBAND_VERIFICATION_FAILED_MPI1_PORTSTATE"
+		exit 0
+	else
+		LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_PORTSTATE"
+	fi
+	
 	## Verify Intel MPI Tests
 	non_shm_mpi_settings=$(echo $mpi_settings | sed 's/shm://')
 
