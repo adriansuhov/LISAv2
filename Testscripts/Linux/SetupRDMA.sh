@@ -581,8 +581,8 @@ function Main() {
 	# verify benchmark binary
 	Verify_File $benchmark_bin
 
-	echo "setup_completed" >> constants.sh
-	
+	echo "setup_completed=0" >> constants.sh
+
 	Debug_Msg "Main function completed"
 }
 
