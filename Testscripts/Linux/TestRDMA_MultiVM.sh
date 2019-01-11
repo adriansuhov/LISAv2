@@ -119,6 +119,7 @@ function Main() {
 	ib_port_state_down_cnt=0
 
 	for vm in $master $slaves_array; do
+		ssh root@${vm} "ibv_devinfo > /root/IMB-PORT_STATE_${vm}"
 		port_state=$(ssh root@${vm} "ibv_devinfo | grep -i state")
 		port_state=$(echo $port_state | cut -d ' ' -f2)
 		if [ "$port_state" == "PORT_ACTIVE" ]; then 
