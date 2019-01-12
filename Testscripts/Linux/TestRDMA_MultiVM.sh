@@ -164,6 +164,23 @@ function Main() {
 		LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_SETUPSTATE"
 	fi
 
+	# Remove bad node from the testing. There is known issue about Limit_UAR issue in mellanox driver.
+	# Scanning dmesg to find ALLOC_UAR, and remove those bad node out of $slaves_array
+	echo $slaves_array > /root/tmp_slaves_array.txt
+
+	for vm in $slaves_array; do
+		ssh root@$i 'dmesg | grep ALLOC_UAR' > /dev/null 2>&1 ; echo $?;
+		
+		if [ "$?" == "0" ]; then 
+			LogErr "$vm RDMA state reach to limit of ALLOC_UAR - Failed and removed from target slaves."
+			sed -i 's/$vm//g' /root/tmp_slaves_array.txt
+		else
+			LogMsg "$vm RDMA state verified healthy - Succeeded."
+		fi 
+	done
+	# Refresh $slaves_array with healthy node
+	slaves_array=$(cat /root/tmp_slaves_array.txt)
+
 	## Verify Intel MPI Tests
 	non_shm_mpi_settings=$(echo $mpi_settings | sed 's/shm://')
 
@@ -481,9 +498,9 @@ function Main() {
 		modified_slaves=${slaves//,/:$VM_Size,}
 
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master:$VM_Size,$modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path allreduce"
+			LogMsg "$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path allreduce"
 			LogMsg "IMB-MPI1 test iteration $attempt - Running."
-			$mpi_run_path -hostlist $master:$VM_Size,$modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path allreduce \
+			$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_mpi1_path allreduce \
 				> IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 			mpi_status=$?
 			
@@ -567,9 +584,9 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $master:$VM_Size,$modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
+			LogMsg "$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
 			LogMsg "IMB-NBC test iteration $attempt - Running."
-			$mpi_run_path -hostlist $master:$VM_Size,$modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
+			$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
 				> IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 			nbc_status=$?
 		
