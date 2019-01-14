@@ -169,7 +169,7 @@ function Main() {
 	echo $slaves_array > /root/tmp_slaves_array.txt
 
 	for vm in $slaves_array; do
-		ssh root@$i 'dmesg | grep ALLOC_UAR' > /dev/null 2>&1 ; echo $?;
+		ssh root@$i 'dmesg | grep ALLOC_UAR' > /dev/null 2>&1;
 		
 		if [ "$?" == "0" ]; then 
 			LogErr "$vm RDMA state reach to limit of ALLOC_UAR - Failed and removed from target slaves."
