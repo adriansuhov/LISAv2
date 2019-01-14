@@ -126,9 +126,38 @@ function Main {
                 -password $password "/root/SetupRDMA.sh" -RunInBackground
             WaitFor -seconds 2
         }
-        LogMsg "SetupRDMA background jobs started at $date. Waiting for 4500 seconds"
-        Start-Sleep -Seconds 4500
-        LogMsg "SetupRDMS is done"
+
+        $isSetupCompleted=1
+        $timeout = New-Timespan -Minutes 120
+        $sw = [diagnostics.stopwatch]::StartNew()
+        while ($sw.elapsed -lt $timeout){
+            $vmCount = $AllVMData.Count
+            foreach ($VMData in $AllVMData) {
+                WaitFor -seconds 15
+                $state = RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $user -password $password "cat /root/state.txt" -runAsSudo
+                if ($state -eq "TestCompleted") {
+                    $setupRDMACompleted = RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $user -password $password `
+                        "cat /root/constants.sh | grep setup_completed=0" -runAsSudo
+                    if ($setupRDMACompleted -ne "setup_completed=0") {
+                        Throw "SetupRDMA.sh run finished on $($VMData.RoleName) but setup was not successful!"
+                    }
+                    LogMsg "SetupRDMA.sh finished on $($VMData.RoleName)"
+                    $vmCount--
+                    $isSetupCompleted=0
+                } else {
+                    $isSetupCompleted=1
+                }
+            }
+            if ($isSetupCompleted -eq 0){
+                break
+            }
+            LogMsg "SetupRDMA.sh is still running on $vmCount VM(s)!"
+        }
+        if ($isSetupCompleted -eq 0){
+            LogMsg "SetupRDMA.sh is done"
+        } else {
+            Throw "SetupRDMA.sh didn't finish at least on one VM!"
+        }
 
         # Reboot VM to apply RDMA changes
         $restartStatus = RestartAllDeployments -AllVMData $AllVMData

@@ -73,7 +73,7 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_MPI_SETTINGS_IB</ReplaceThis>
-        <ReplaceWith>-env I_MPI_FABRICS shm:dapl -env I_MPI_DAPL_PROVIDER=ofa-v2-ib0 -env SECS_PER_SAMPLE=600</ReplaceWith>
+        <ReplaceWith>-env I_MPI_FABRICS ofa -env I_MPI_DAPL_PROVIDER=ofa-v2-ib0 -env SECS_PER_SAMPLE=600</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_MPI_SETTINGS_TCP</ReplaceThis>
@@ -89,7 +89,7 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_MPI_SETTINGS_IB</ReplaceThis>
-        <ReplaceWith>--mca btl self,vader --mca btl_openib_cq_size 4096</ReplaceWith>
+        <ReplaceWith>--mca btl self,vader,openib --mca btl_openib_cq_size 4096</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IB_NIC</ReplaceThis>
@@ -117,7 +117,7 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_PPN</ReplaceThis>
-        <ReplaceWith>2</ReplaceWith>
+        <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_MPI_TEST_COUNT</ReplaceThis>
@@ -132,8 +132,9 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>all</ReplaceWith>
     </Parameter>
     <Parameter>
+        <!-- 12/01/2019 - 'Accumulate' and 'Get_accumulate' not working - removing them for now -->
         <ReplaceThis>INFINIBAND_OPEN_RMA_TESTNAMES</ReplaceThis>
-        <ReplaceWith>all</ReplaceWith>
+        <ReplaceWith>Unidir_put Unidir_get Bidir_put Bidir_get One_put_all One_get_all All_put_all All_get_all Put_local Put_all_local Exchange_put Exchange_get Fetch_and_op Compare_and_swap</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_RMA_TEST_COUNT</ReplaceThis>

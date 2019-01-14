@@ -581,9 +581,7 @@ function Main() {
 	# verify benchmark binary
 	Verify_File $benchmark_bin
 
-	cd
-
-	echo "setup_completed=0" >> constants.sh
+	echo "setup_completed=0" >> /root/constants.sh
 
 	Debug_Msg "Main function completed"
 }
@@ -643,3 +641,5 @@ function post_verification() {
 # main body
 Main
 post_verification $mpi_type
+SetTestStateCompleted
+exit 0

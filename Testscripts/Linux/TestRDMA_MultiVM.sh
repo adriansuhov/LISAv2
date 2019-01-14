@@ -137,7 +137,7 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_FAILED_MPI1_PORTSTATE"
 		exit 0
 	else
-		LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_PORTSTATE"
+		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_PORTSTATE"
 	fi
 	
 	# Verify if SetupRDMA completed all steps or not
@@ -161,7 +161,7 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_FAILED_MPI1_SETUPSTATE"
 		exit 0
 	else
-		LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_SETUPSTATE"
+		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_SETUPSTATE"
 	fi
 
 	# Remove bad node from the testing. There is known issue about Limit_UAR issue in mellanox driver.
@@ -202,19 +202,29 @@ function Main() {
 		# Verify Intel MPI PingPong Tests (IntraNode).
 		final_mpi_intranode_status=0
 
-		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong"
-			LogMsg "Checking IMB-MPI1 IntraNode status in $vm"
-			ssh root@${vm} "$mpi_run_path -hosts $vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong \
-				> IMB-MPI1-IntraNode-pingpong-output-$vm.txt"
-			mpi_intranode_status=$?
-			scp root@${vm}:IMB-MPI1-IntraNode-pingpong-output-$vm.txt .
-			if [ $mpi_intranode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 Intranode status in $vm - Succeeded."
-			else
-				LogErr "IMB-MPI1 Intranode status in $vm - Failed"
+		for vm1 in $master $slaves_array; do
+			# Manual running needs to clean up the old log files.
+			if [ -f ./IMB-MPI1-IntraNode-output-$vm1.txt ]; then
+				rm -f ./IMB-MPI1-IntraNode-output-$vm1*.txt
+				LogMsg "Removed the old log files"
 			fi
-			final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
+			for vm2 in $master $slaves_array; do
+				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
+				LogMsg "$mpi_run_path -hosts $vm1,$vm2 -ppn 2 -n 2 $non_shm_mpi_settings $imb_mpi1_path pingpong"
+				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
+				ssh root@${vm1} "$mpi_run_path -hosts $vm1,$vm2 -ppn 2 -n 2 $non_shm_mpi_settings $imb_mpi1_path pingpong \
+					>> $log_file"
+				mpi_intranode_status=$?
+
+				scp root@${vm1}:$log_file .
+
+				if [ $mpi_intranode_status -eq 0 ]; then
+					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+				else
+					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+				fi
+				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
+			done
 		done
 
 		if [ $final_mpi_intranode_status -ne 0 ]; then
@@ -228,46 +238,47 @@ function Main() {
 		fi
 
 		# Verify Intel MPI PingPong Tests (InterNode).
-		final_mpi_internode_status=0
+		# final_mpi_internode_status=0
 
-		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong"
-			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong \
-				>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
-			mpi_internode_status=$?
-			if [ $mpi_internode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
-			else
-				LogErr "IMB-MPI1 Internode status in $vm - Failed"
-			fi
-			final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
-		done
+		# for vm in $slaves_array; do
+		# 	LogMsg "$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong"
+		# 	LogMsg "Checking IMB-MPI1 InterNode status in $vm"
+		# 	$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong \
+		# 		>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
+		# 	mpi_internode_status=$?
+		# 	if [ $mpi_internode_status -eq 0 ]; then
+		# 		LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
+		# 	else
+		# 		LogErr "IMB-MPI1 Internode status in $vm - Failed"
+		# 	fi
+		# 	final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
+		# done
 
-		if [ $final_mpi_internode_status -ne 0 ]; then
-			LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
-			SetTestStateFailed
-			Collect_Kernel_Logs_From_All_VMs
-			LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
-			exit 0
-		else
-			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-		fi
+		# if [ $final_mpi_internode_status -ne 0 ]; then
+		# 	LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
+		# 	SetTestStateFailed
+		# 	Collect_Kernel_Logs_From_All_VMs
+		# 	LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
+		# 	exit 0
+		# else
+		# 	LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
+		# fi
 
 		# Verify Intel MPI IMB-MPI1 (pingpong & allreduce etc) tests.
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
+		modified_slaves=${slaves//,/:$VM_Size,}
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
 			if [[ $imb_mpi1_tests == "all" ]]; then
-				LogMsg "$mpi_run_path -hosts $master,$slaves -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path"
+				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $mpi1_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_mpi1_path"
 				LogMsg "IMB-MPI1 test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$slaves -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path \
+				$mpi_run_path -hosts $master,$modified_slaves -ppn $mpi1_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_mpi1_path \
 					>IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 				mpi_status=$?
 			else
-				LogMsg "$mpi_run_path -hosts $master,$slaves -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests"
+				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $mpi1_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests"
 				LogMsg "IMB-MPI1 test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$slaves -ppn $mpi1_ppn -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests \
+				$mpi_run_path -hosts $master,$modified_slaves -ppn $mpi1_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests \
 					>IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 				mpi_status=$?
 			fi
@@ -301,15 +312,15 @@ function Main() {
 		imb_rma_final_status=0
 		for attempt in $total_attempts; do
 			if [[ $imb_rma_tests == "all" ]]; then
-				LogMsg "$mpi_run_path -hosts $master,$slaves -ppn $rma_ppn -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path"
+				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $rma_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_rma_path"
 				LogMsg "IMB-RMA test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$slaves -ppn $rma_ppn -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path \
+				$mpi_run_path -hosts $master,$modified_slaves -ppn $rma_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_rma_path \
 					>IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
 				rma_status=$?
 			else
-				LogMsg "$mpi_run_path -hosts $master,$slaves -ppn $rma_ppn -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests"
+				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $rma_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests"
 				LogMsg "IMB-RMA test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$slaves -ppn $rma_ppn -n $(($rma_ppn * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests \
+				$mpi_run_path -hosts $master,$modified_slaves -ppn $rma_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_rma_path $imb_rma_tests \
 					>IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
 				rma_status=$?
 			fi
@@ -342,15 +353,15 @@ function Main() {
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
 			if [[ $imb_nbc_tests == "all" ]]; then
-				LogMsg "$mpi_run_path -hosts $master,$slaves -ppn $nbc_ppn -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
+				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
 				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$slaves -ppn $nbc_ppn -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
+				$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
 					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 				nbc_status=$?
 			else
-				LogMsg "$mpi_run_path -hosts $master,$slaves -ppn $nbc_ppn -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
+				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
 				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$slaves -ppn $nbc_ppn -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
+				$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
 					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
 				nbc_status=$?
 			fi
@@ -651,57 +662,66 @@ function Main() {
 		#Verify PingPong Tests (IntraNode).
 		final_mpi_intranode_status=0
 
-		for vm in $master $slaves_array; do
-			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $vm,$master $imb_mpi1_path pingpong"
-			LogMsg "Checking IMB-MPI1 Intranode status in $vm"
-			ssh root@${vm} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $vm,$master $imb_mpi1_path pingpong \
-				> IMB-MPI1-IntraNode-pingpong-output-$vm.txt"
-			mpi_intranode_status=$?
-			scp root@${vm}:IMB-MPI1-IntraNode-pingpong-output-$vm.txt .
-			if [ $mpi_intranode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 Intranode status in $vm - Succeeded."
-			else
-				LogErr "IMB-MPI1 Intranode status in $vm - Failed"
+		for vm1 in $master $slaves_array; do
+			# Manual running needs to clean up the old log files.
+			if [ -f ./IMB-MPI1-IntraNode-output-$vm1.txt ]; then
+				rm -f ./IMB-MPI1-IntraNode-output-$vm1*.txt
+				LogMsg "Removed the old log files"
 			fi
-			final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
-		done
+			for vm2 in $master $slaves_array; do
+				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
+				LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm1,$vm2 $imb_mpi1_path pingpong"
+				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
+				ssh root@${vm1} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm1,$vm2 $imb_mpi1_path pingpong \
+					>> $log_file"
+				mpi_intranode_status=$?
 
+				scp root@${vm1}:$log_file .
+
+				if [ $mpi_intranode_status -eq 0 ]; then
+					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+				else
+					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+				fi
+				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
+			done
+		done
 		if [ $final_mpi_intranode_status -ne 0 ]; then
-			LogErr "IMB-MPI1 Intranode test failed in somes VMs. Aborting further tests."
+			LogErr "IMB-MPI1 Intranode ping_pong test failed in somes VMs. Aborting further tests."
 			SetTestStateFailed
 			Collect_Kernel_Logs_From_All_VMs
-			LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTRANODE"
+			LogMsg "INFINIBAND_VERIFICATION_FAILED_MPI1_INTRANODE"
 			exit 0
 		else
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
 		fi
-
+		
 		#Verify PingPong Tests (InterNode).
-		final_mpi_internode_status=0
+		# final_mpi_internode_status=0
 
-		for vm in $slaves_array; do
-			LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong"
-			LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-			$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong \
-				>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
-			mpi_internode_status=$?
-			if [ $mpi_internode_status -eq 0 ]; then
-				LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
-			else
-				LogErr "IMB-MPI1 Internode status in $vm - Failed"
-			fi
-			final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
-		done
+		# for vm in $slaves_array; do
+		#     LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong"
+		#     LogMsg "Checking IMB-MPI1 InterNode status in $vm"
+		#     $mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong \
+		#         >IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
+		#     mpi_internode_status=$?
+		#     if [ $mpi_internode_status -eq 0 ]; then
+		#         LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
+		#     else
+		#         LogErr "IMB-MPI1 Internode status in $vm - Failed"
+		#     fi
+		#     final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
+		# done
 
-		if [ $final_mpi_internode_status -ne 0 ]; then
-			LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
-			SetTestStateFailed
-			Collect_Kernel_Logs_From_All_VMs
-			LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
-			exit 0
-		else
-			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-		fi
+		# if [ $final_mpi_internode_status -ne 0 ]; then
+		#     LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
+		#     SetTestStateFailed
+		#     Collect_Kernel_Logs_From_All_VMs
+		#     LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
+		#     exit 0
+		# else
+		#     LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
+		# fi
 
 		#Verify IMB-MPI1 (pingpong & allreduce etc) tests.
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
@@ -716,7 +736,7 @@ function Main() {
 			else
 				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests"
 				LogMsg "IMB-MPI1 test iteration $attempt - Running."
-				$mpi_run_path --allow-run-as-root --host $master,$slaves -n	$(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests \
+				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($mpi1_ppn * $total_virtual_machines)) $mpi_settings $imb_mpi1_path $imb_mpi1_tests \
 					>IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
 				mpi_status=$?
 			fi
