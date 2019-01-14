@@ -166,6 +166,8 @@ function Main() {
 
 	# Remove bad node from the testing. There is known issue about Limit_UAR issue in mellanox driver.
 	# Scanning dmesg to find ALLOC_UAR, and remove those bad node out of $slaves_array
+	alloc_uar_limited_cnt=0
+
 	echo $slaves_array > /root/tmp_slaves_array.txt
 
 	for vm in $slaves_array; do
@@ -174,6 +176,7 @@ function Main() {
 		if [ "$?" == "0" ]; then 
 			LogErr "$vm RDMA state reach to limit of ALLOC_UAR - Failed and removed from target slaves."
 			sed -i 's/$vm//g' /root/tmp_slaves_array.txt
+			alloc_uar_limited_cnt=$(($alloc_uar_limited_cnt + 1))
 		else
 			LogMsg "$vm RDMA state verified healthy - Succeeded."
 		fi 
@@ -391,15 +394,17 @@ function Main() {
 
 		Collect_Kernel_Logs_From_All_VMs
 
-		finalStatus=$(($final_ib_nic_status + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
+		finalStatus=$(($final_ib_nic_status + $ib_port_state_down_cnt + $alloc_uar_limited_cnt + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
 
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $final_ib_nic_status"
+			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
+			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
 			#LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
 			LogMsg "imb_rma_final_status: $imb_rma_final_status"
-			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
+			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"			
 			LogErr "INFINIBAND_VERIFICATION_FAILED"
 			SetTestStateFailed
 		else
@@ -627,10 +632,12 @@ function Main() {
 		Collect_Kernel_Logs_From_All_VMs
 
 		# finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
-		finalStatus=$(($final_ib_nic_status + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_nbc_final_status))
+		finalStatus=$(($final_ib_nic_status + $ib_port_state_down_cnt + $alloc_uar_limited_cnt + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_nbc_final_status))
 		
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $final_ib_nic_status"
+			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
+			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
 			# LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
@@ -848,10 +855,12 @@ function Main() {
 
 		Collect_Kernel_Logs_From_All_VMs
 
-		finalStatus=$(($final_ib_nic_status + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
+		finalStatus=$(($final_ib_nic_status + $ib_port_state_down_cnt + $alloc_uar_limited_cnt + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
 
 		if [ $finalStatus -ne 0 ]; then
 			LogMsg "${ib_nic}_status: $final_ib_nic_status"
+			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
+			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
 			#LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
