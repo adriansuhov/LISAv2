@@ -188,6 +188,62 @@ function Main() {
 	# Refresh $slaves_array with healthy node
 	slaves_array=$(cat /root/tmp_slaves_array.txt)
 
+	# ############################################################################################################
+	# Verify ibv_rc_pingpong, ibv_uc_pingpong and ibv_ud_pingpong and rping.
+	final_pingpong_state=0
+
+	# Define ibv_ pingpong commands in the array
+	declare -a ping_cmds=("ibv_rc_pingpong" "ibv_uc_pingpong" "ibv_ud_pingpong")
+
+	for ping_cmd in "${ping_cmds[@]}"; do
+		for vm1 in $master $slaves_array; do
+			for vm2 in $slaves_array $master; do
+				if [[ "$vm1" == "$vm2" ]]; then
+					# Skip self-ping test case
+					break
+				fi
+				# Define pingpong test log file name
+				log_file=IMB-"$ping_cmd"-output-$vm1-$vm2.txt
+				LogMsg "Run $ping_cmd from $vm2 to $vm1"
+				LogMsg "  Start $ping_cmd in server VM $vm1 first"
+				ssh root@${vm1} "$ping_cmd" &
+				sleep 1
+				LogMsg "  Start $ping_cmd in client VM $vm2"
+				ssh root@${vm2} "$ping_cmd $vm1 > /root/$log_file"
+				pingpong_state=$?
+				sleep 1
+
+				scp root@${vm2}:/root/$log_file .
+
+				# Verify if ping-pong test successful, because of server side setup.
+				if [ $pingpong_state -eq 0 ]; then
+					LogMsg "$ping_cmd test execution successful"
+				else
+					LogErr "$ping_cmd test execution failed"
+				fi
+
+				pingpong_result=$(cat $log_file | grep -i Mbit | cut -d ' ' -f7)
+
+				if [ $pingpong_result > 0 ]; then
+					LogMsg "$ping_cmd result $pingpong_result in $vm1-$vm2 - Succeeded."
+				else
+					LogErr "$ping_cmd result $pingpong_result in $vm1-$vm2 - Failed"
+					final_pingpong_state=$(($final_pingpong_state + 1))
+				fi
+			done
+		done
+	done
+
+	if [ $final_pingpong_state -ne 0 ]; then
+		LogErr "ibv_ping_pong test failed in somes VMs. Aborting further tests."
+		SetTestStateFailed
+		Collect_Kernel_Logs_From_All_VMs
+		LogErr "INFINIBAND_VERIFICATION_FAILED_IBV_PINGPONG"
+		exit 0
+	else
+		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_IBV_PINGPONG"
+	fi
+	
 	## Verify Intel MPI Tests
 	non_shm_mpi_settings=$(echo $mpi_settings | sed 's/shm://')
 
@@ -204,7 +260,6 @@ function Main() {
 		
 		imb_nbc_path=$(find / -name IMB-NBC | grep intel64)
 		LogMsg "IMB-NBC Path: $imb_nbc_path"
-
 
 		# Verify Intel MPI PingPong Tests (IntraNode).
 		final_mpi_intranode_status=0
