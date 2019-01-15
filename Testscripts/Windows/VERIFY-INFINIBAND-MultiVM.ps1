@@ -16,7 +16,7 @@ function Main {
                 $ServerVMData = $VmData
                 $NoServer = $false
             }
-            elseif ( $VmData.RoleName -imatch "Client" ) {
+            elseif ( $VmData.RoleName -imatch "client" ) {
                 $ClientMachines += $VmData
                 $NoClient = $fase
                 if ( $SlaveInternalIPs ) {
@@ -161,7 +161,7 @@ function Main {
 
         # Reboot VM to apply RDMA changes
         $restartStatus = RestartAllDeployments -AllVMData $AllVMData
-        LogMsg "Rebooting All VMS after all setup is done: $restartStatus"
+        LogMsg "Rebooting All VMs after all setup is done: $restartStatus"
         # Wait for VM boot up and update ip address
         Start-Sleep -Seconds 240
 
@@ -385,7 +385,7 @@ function Main {
                 $TotalSuccessCount += 1
             }
             elseif ( $FinalStatus -imatch "TestRunning") {
-                LogMsg "Powershell backgroud job for test is completed but VM is reporting that test is still running. Please check $LogDir\mdConsoleLogs.txt"
+                LogMsg "PowerShell backgroud job for test is completed but VM is reporting that test is still running. Please check $LogDir\mdConsoleLogs.txt"
                 LogMsg "Contests of state.txt : $FinalStatus"
                 $testResult = "FAIL"
             }
