@@ -97,15 +97,15 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_MPI_TESTNAMES</ReplaceThis>
-        <ReplaceWith>pingpong allreduce</ReplaceWith>
+        <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_MPI_TESTNAMES</ReplaceThis>
-        <ReplaceWith>pingpong</ReplaceWith>
+        <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_MPI_TESTNAMES</ReplaceThis>
-        <ReplaceWith>pingpong</ReplaceWith>
+        <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_PPN</ReplaceThis>
@@ -150,15 +150,15 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_NBC_TESTNAMES</ReplaceThis>
-        <ReplaceWith>all</ReplaceWith>
+        <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_IBM_NBC_TESTNAMES</ReplaceThis>
-        <ReplaceWith></ReplaceWith>
+        <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_NBC_TESTNAMES</ReplaceThis>
-        <ReplaceWith>all</ReplaceWith>
+        <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_NBC_TEST_COUNT</ReplaceThis>
