@@ -76,6 +76,7 @@ fi
 function Main() { 
 	LogMsg "Starting $mpi_type MPI tests..."
 
+	# ############################################################################################################
 	# This is common space for all three types of MPI testing
 	# Verify if ib_nic got IP address on All VMs in current cluster.
 	# ib_nic comes from constants.sh. where get those values from XML tags.
@@ -114,6 +115,7 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_${ib_nic}"
 	fi
 
+	# ############################################################################################################
 	# ibv_devinfo verifies PORT STATE
 	# PORT_ACTIVE (4) is expected. If PORT_DOWN (1), it fails
 	ib_port_state_down_cnt=0
@@ -140,6 +142,7 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_PORTSTATE"
 	fi
 	
+	# ############################################################################################################
 	# Verify if SetupRDMA completed all steps or not
 	# IF completed successfully, constants.sh has setup_completed=0 
 	setup_state_cnt=0
@@ -164,6 +167,7 @@ function Main() {
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_SETUPSTATE"
 	fi
 
+	# ############################################################################################################
 	# Remove bad node from the testing. There is known issue about Limit_UAR issue in mellanox driver.
 	# Scanning dmesg to find ALLOC_UAR, and remove those bad node out of $slaves_array
 	alloc_uar_limited_cnt=0
@@ -188,7 +192,7 @@ function Main() {
 	non_shm_mpi_settings=$(echo $mpi_settings | sed 's/shm://')
 
 	if [[ $mpi_type == "intel" ]]; then
-
+		# ############################################################################################################
 		mpi_run_path=$(find / -name mpirun | grep intel64)
 		LogMsg "MPIRUN Path: $mpi_run_path"
 		
@@ -413,7 +417,7 @@ function Main() {
 		fi
 
 	elif [[ $mpi_type == "ibm" ]]; then
-
+		# ############################################################################################################
 		# Search mpirun and benchmark testing files
 		# mpirun -n <P> IMB-<component> [argement], where <P> is the number of processes. P=1 is recommended for 
 		#				all I/O and message passing benchmarks except the single transfer ones.
@@ -651,6 +655,7 @@ function Main() {
 		fi
 
 	else
+		# ############################################################################################################
 		# OPEN MPI execution
 		# Need exclusive word intel if it runs in HPC image. Both will conflict.
 		mpi_run_path=$(find / -name mpirun | head -n 1)
