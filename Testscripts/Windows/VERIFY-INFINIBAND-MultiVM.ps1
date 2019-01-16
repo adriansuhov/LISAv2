@@ -102,7 +102,7 @@ function Main {
                 -files "$constantsFile,$($CurrentTestData.files)" -username $test_super_user -password $password -upload
         }
         #endregion
-        
+
         $RemainingRebootIterations = $CurrentTestData.NumberOfReboots
         $ExpectedSuccessCount = [int]($CurrentTestData.NumberOfReboots) + 1
         $TotalSuccessCount = 0
@@ -127,7 +127,6 @@ function Main {
             WaitFor -seconds 2
         }
 
-        $isSetupCompleted=1
         $timeout = New-Timespan -Minutes 120
         $sw = [diagnostics.stopwatch]::StartNew()
         while ($sw.elapsed -lt $timeout){
@@ -143,18 +142,16 @@ function Main {
                     }
                     LogMsg "SetupRDMA.sh finished on $($VMData.RoleName)"
                     $vmCount--
-                    $isSetupCompleted=0
-                } else {
-                    $isSetupCompleted=1
                 }
             }
-            if ($isSetupCompleted -eq 0){
+            if ($vmCount -eq 0){
                 break
             }
             LogMsg "SetupRDMA.sh is still running on $vmCount VM(s)!"
         }
-        if ($isSetupCompleted -eq 0){
+        if ($vmCount -eq 0){
             LogMsg "SetupRDMA.sh is done"
+			Start-Sleep -s 30
         } else {
             Throw "SetupRDMA.sh didn't finish at least on one VM!"
         }
