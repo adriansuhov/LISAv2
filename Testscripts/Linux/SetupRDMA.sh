@@ -270,61 +270,6 @@ function Main() {
 		export MPI_ROOT=/opt/ibm/platform_mpi
 		export PATH=$PATH:$MPI_ROOT
 		export PATH=$PATH:$MPI_ROOT/bin
-
-		# Install stable WALA agent and apply 3 patches
-		# This is customized part for RHEL 7.5 Standard_HB60rs
-		cd
-
-		Debug_Msg "Download WALA agent repo"
-		git clone https://github.com/Azure/WALinuxAgent.git
-		Verify_Result
-
-		cd WALinuxAgent
-		
-		Debug_Msg "Download 1365.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1365.patch
-		Verify_Result
-		
-		Debug_Msg "Download 1375.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1375.patch
-		Verify_Result
-		
-		Debug_Msg "Download 1389.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1389.patch
-		Verify_Result
-		
-		Debug_Msg "Reset to commit 72b643ea93e5258c3cec0e778017936806111f15"
-		git reset --hard 72b643ea93e5258c3cec0e778017936806111f15
-		Verify_Result
-
-		Debug_Msg "Apply 1365 patch"
-		git am 1365.patch
-		Verify_Result
-		
-		Debug_Msg "Apply 1375 patch"
-		git am 1375.patch
-		Verify_Result
-		
-		Debug_Msg "Apply 1389 patch"
-		git am 1389.patch
-		Verify_Result
-		
-		Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
-		sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
-		Verify_Result
-
-		Debug_Msg "Disable AutoUpdate parameter in waagent.config"
-		sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
-		Verify_Result
-		
-		Debug_Msg "Compile WALA"
-		python setup.py install --register-service  --force
-		Verify_Result
-
-		Debug_Msg "Restart waagent service"
-		service waagent restart
-		Verify_Result
-
 	elif [ $mpi_type == "intel" ]; then
 		# if HPC images comes with MPI binary pre-installed, (CentOS HPC) 
 		#	there is no action required except binay verification
@@ -394,60 +339,6 @@ function Main() {
 			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
 		fi
 		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
-
-		# Install stable WALA agent and apply 3 patches
-		# This is customized part for RHEL 7.5 Standard_HB60rs
-		cd
-
-		Debug_Msg "Download WALA agent repo"
-		git clone https://github.com/Azure/WALinuxAgent.git
-		Verify_Result
-
-		cd WALinuxAgent
-		
-		Debug_Msg "Download 1365.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1365.patch
-		Verify_Result
-		
-		Debug_Msg "Download 1375.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1375.patch
-		Verify_Result
-		
-		Debug_Msg "Download 1389.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1389.patch
-		Verify_Result
-		
-		Debug_Msg "Reset to commit 72b643ea93e5258c3cec0e778017936806111f15"
-		git reset --hard 72b643ea93e5258c3cec0e778017936806111f15
-		Verify_Result
-
-		Debug_Msg "Apply 1365 patch"
-		git am 1365.patch
-		Verify_Result
-		
-		Debug_Msg "Apply 1375 patch"
-		git am 1375.patch
-		Verify_Result
-		
-		Debug_Msg "Apply 1389 patch"
-		git am 1389.patch
-		Verify_Result
-		
-		Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
-		sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
-		Verify_Result
-
-		Debug_Msg "Disable AutoUpdate parameter in waagent.config"
-		sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
-		Verify_Result
-		
-		Debug_Msg "Compile WALA"
-		python setup.py install --register-service  --force
-		Verify_Result
-
-		Debug_Msg "Restart waagent service"
-		service waagent restart
-		Verify_Result
 	else 
 		# Open MPI installation
 		Debug_Msg "Open MPI installation running ..."
@@ -502,62 +393,34 @@ function Main() {
 			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
 		fi
 		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
-
-		# Install stable WALA agent and apply 3 patches
-		# This is customized part for RHEL 7.5 Standard_HB60rs
-		cd
-
-		Debug_Msg "Download WALA agent repo"
-		git clone https://github.com/Azure/WALinuxAgent.git
-		Verify_Result
-
-		cd WALinuxAgent
-		
-		Debug_Msg "Download 1365.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1365.patch
-		Verify_Result
-		
-		Debug_Msg "Download 1375.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1375.patch
-		Verify_Result
-		
-		Debug_Msg "Download 1389.patch"
-		wget https://patch-diff.githubusercontent.com/raw/Azure/WALinuxAgent/pull/1389.patch
-		Verify_Result
-		
-		Debug_Msg "Reset to commit 72b643ea93e5258c3cec0e778017936806111f15"
-		git reset --hard 72b643ea93e5258c3cec0e778017936806111f15
-		Verify_Result
-
-		Debug_Msg "Apply 1365 patch"
-		git am 1365.patch
-		Verify_Result
-		
-		Debug_Msg "Apply 1375 patch"
-		git am 1375.patch
-		Verify_Result
-		
-		Debug_Msg "Apply 1389 patch"
-		git am 1389.patch
-		Verify_Result
-		
-		Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
-		sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
-		Verify_Result
-
-		Debug_Msg "Disable AutoUpdate parameter in waagent.config"
-		sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
-		Verify_Result
-		
-		Debug_Msg "Compile WALA"
-		python setup.py install --register-service  --force
-		Verify_Result
-
-		Debug_Msg "Restart waagent service"
-		service waagent restart
-		Verify_Result
 	fi
 	
+	# Install stable WALA agent and apply 3 patches
+	# This is customized part for RHEL 7.5 Standard_HB60rs
+	cd ~
+
+	Debug_Msg "Download WALA agent repo and checkout tag 2.2.35"
+	git clone --branch v2.2.35 https://github.com/Azure/WALinuxAgent
+	Verify_Result
+
+	cd WALinuxAgent
+	
+	Debug_Msg "Eanble EnableRDMA parameter in waagent.config"
+	sed -i -e 's/# OS.EnableRDMA=y/OS.EnableRDMA=y/g' config/waagent.conf
+	Verify_Result
+
+	Debug_Msg "Disable AutoUpdate parameter in waagent.config"
+	sed -i -e 's/AutoUpdate.Enabled=y/# AutoUpdate.Enabled=y/g' config/waagent.conf
+	Verify_Result
+	
+	Debug_Msg "Compile WALA"
+	python setup.py install --register-service  --force
+	Verify_Result
+
+	Debug_Msg "Restart waagent service"
+	service waagent restart
+	Verify_Result
+
 	cd ~
 	
 	Debug_Msg "Proceeding Intel MPI Benchmark test installation"
