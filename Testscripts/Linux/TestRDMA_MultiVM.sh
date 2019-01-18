@@ -206,27 +206,28 @@ function Main() {
 				log_file=IMB-"$ping_cmd"-output-$vm1-$vm2.txt
 				LogMsg "Run $ping_cmd from $vm2 to $vm1"
 				LogMsg "  Start $ping_cmd in server VM $vm1 first"
-				ssh root@${vm1} "$ping_cmd" &
-				sleep 1
-				LogMsg "  Start $ping_cmd in client VM $vm2"
-				ssh root@${vm2} "$ping_cmd $vm1 > /root/$log_file"
-				pingpong_state=$?
-				sleep 1
+				retries=0
+				while [ $retries -lt 3 ]; do
+					ssh root@${vm1} "$ping_cmd" &
+					sleep 1
+					LogMsg "  Start $ping_cmd in client VM $vm2"
+					ssh root@${vm2} "$ping_cmd $vm1 > /root/$log_file"
+					pingpong_state=$?
 
-				scp root@${vm2}:/root/$log_file .
-
-				# Verify if ping-pong test successful, because of server side setup.
-				if [ $pingpong_state -eq 0 ]; then
-					LogMsg "$ping_cmd test execution successful"
-				else
+					sleep 1
+					scp root@${vm2}:/root/$log_file .
+					pingpong_result=$(cat $log_file | grep -i Mbit | cut -d ' ' -f7)
+					if [ $pingpong_state -eq 0 ] && [ $pingpong_result > 0 ]; then
+						LogMsg "$ping_cmd test execution successful"
+						LogMsg "$ping_cmd result $pingpong_result in $vm1-$vm2 - Succeeded."
+						retries=4
+					else
+						sleep 10
+						let retries=retries+1
+					fi
+				done
+				if [ $pingpong_state -ne 0 ] || (($(echo "$pingpong_result <= 0" | bc -l))); then
 					LogErr "$ping_cmd test execution failed"
-				fi
-
-				pingpong_result=$(cat $log_file | grep -i Mbit | cut -d ' ' -f7)
-
-				if [ $pingpong_result > 0 ]; then
-					LogMsg "$ping_cmd result $pingpong_result in $vm1-$vm2 - Succeeded."
-				else
 					LogErr "$ping_cmd result $pingpong_result in $vm1-$vm2 - Failed"
 					final_pingpong_state=$(($final_pingpong_state + 1))
 				fi
@@ -274,18 +275,24 @@ function Main() {
 				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
 				LogMsg "$mpi_run_path -hosts $vm1,$vm2 -ppn 2 -n 2 $non_shm_mpi_settings $imb_mpi1_path pingpong"
 				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
-				ssh root@${vm1} "$mpi_run_path -hosts $vm1,$vm2 -ppn 2 -n 2 $non_shm_mpi_settings $imb_mpi1_path pingpong \
-					>> $log_file"
-				mpi_intranode_status=$?
-
-				scp root@${vm1}:$log_file .
-
-				if [ $mpi_intranode_status -eq 0 ]; then
-					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
-				else
+				retries=0
+				while [ $retries -lt 3 ]; do
+					ssh root@${vm1} "$mpi_run_path -hosts $vm1,$vm2 -ppn 2 -n 2 $non_shm_mpi_settings $imb_mpi1_path pingpong \
+						>> $log_file"
+					mpi_intranode_status=$?
+					scp root@${vm1}:$log_file .
+					if [ $mpi_intranode_status -eq 0 ]; then
+						LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+						retries=4
+					else
+						sleep 10
+						let retries=retries+1
+					fi
+				done
+				if [ $mpi_intranode_status -ne 0 ]; then
 					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+					final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 				fi
-				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 			done
 		done
 
@@ -514,17 +521,23 @@ function Main() {
 				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
 				LogMsg "$mpi_run_path -hostlist $vm1:1,$vm2:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
 				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
-				ssh root@${vm1} "$mpi_run_path -hostlist $vm1:1,$vm2:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 >> $log_file"
-				mpi_intranode_status=$?
-
-				scp root@${vm1}:$log_file .
-
-				if [ $mpi_intranode_status -eq 0 ]; then
-					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
-				else
+				retries=0
+				while [ $retries -lt 3 ]; do
+					ssh root@${vm1} "$mpi_run_path -hostlist $vm1:1,$vm2:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 >> $log_file"
+					mpi_intranode_status=$?
+					scp root@${vm1}:$log_file .
+					if [ $mpi_intranode_status -eq 0 ]; then
+						LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+						retries=4
+					else
+						sleep 10
+						let retries=retries+1
+					fi
+				done
+				if [ $mpi_intranode_status -ne 0 ]; then
 					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+					final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 				fi
-				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 			done
 		done
 
@@ -738,18 +751,25 @@ function Main() {
 				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
 				LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm1,$vm2 $imb_mpi1_path pingpong"
 				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
-				ssh root@${vm1} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm1,$vm2 $imb_mpi1_path pingpong \
-					>> $log_file"
-				mpi_intranode_status=$?
+				retries=0
+				while [ $retries -lt 3 ]; do
+					ssh root@${vm1} "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np 2 --host $vm1,$vm2 $imb_mpi1_path pingpong \
+						>> $log_file"
+					mpi_intranode_status=$?
 
-				scp root@${vm1}:$log_file .
-
-				if [ $mpi_intranode_status -eq 0 ]; then
-					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
-				else
+					scp root@${vm1}:$log_file .
+					if [ $mpi_intranode_status -eq 0 ]; then
+						LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+						retries=4
+					else
+						sleep 10
+						let retries=retries+1
+					fi
+				done
+				if [ $mpi_intranode_status -ne 0 ]; then
 					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+					final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 				fi
-				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
 			done
 		done
 		if [ $final_mpi_intranode_status -ne 0 ]; then

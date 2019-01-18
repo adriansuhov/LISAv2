@@ -258,6 +258,28 @@ function Main {
                     -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
                 #endregion
 
+                #region Check ibv_ping_pong tests
+                $pattern = "INFINIBAND_VERIFICATION_SUCCESS_IBV_PINGPONG"
+                LogMsg "Analyzing $logFileName"
+                $metaData = "InfiniBand-Verification-$Iteration-$TempName : IBV_PINGPONG"
+                $SucessLogs = Select-String -Path $logFileName -Pattern $pattern
+                if ($SucessLogs.Count -eq 1) {
+                    $currentResult = "PASS"
+                }
+                else {
+                    # Get the actual tests that failed and output them
+                    $failedPingPongIBV = Select-String -Path $logFileName -Pattern '(_pingpong.*Failed)'
+                    foreach ($failedTest in $failedPingPongIBV) {
+                        LogErr "$($failedTest.Line.Split()[-7..-1])"
+                    }
+                    $currentResult = "FAIL"
+                }
+                LogMsg "$pattern : $currentResult"
+                $resultArr += $currentResult
+                $CurrentTestResult.TestSummary += CreateResultSummary -testResult $currentResult -metaData $metaData `
+                    -checkValues "PASS,FAIL,ABORTED" -testName $CurrentTestData.testName
+                #endregion
+
                 #region Check MPI pingpong intranode tests
                 $logFileName = "$LogDir\InfiniBand-Verification-$Iteration-$TempName\TestExecution.log"
                 $pattern = "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
