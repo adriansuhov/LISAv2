@@ -84,6 +84,7 @@ function Main() {
 	total_virtual_machines=0
 	err_virtual_machines=0
 	slaves_array=$(echo ${slaves} | tr ',' ' ')
+	nbc_benchmarks="Ibcast Iallgather Iallgatherv Igather Igatherv Iscatter Iscatterv Ialltoall Ialltoallv Ireduce Ireduce_scatter Iallreduce Ibarrier"
 
 	for vm in $master $slaves_array; do
 		LogMsg "Checking $ib_nic status in $vm"
@@ -113,26 +114,32 @@ function Main() {
 	else
 		# Verify all VM have ib_nic available for further testing
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_${ib_nic}"
+		# Removing controller VM from total_virtual_machines count
+		total_virtual_machines=$(($total_virtual_machines - 1))
 	fi
 
 	# ############################################################################################################
 	# ibv_devinfo verifies PORT STATE
 	# PORT_ACTIVE (4) is expected. If PORT_DOWN (1), it fails
 	ib_port_state_down_cnt=0
-
+	min_port_state_up_cnt=0
 	for vm in $master $slaves_array; do
+		min_port_state_up_cnt=$(($min_port_state_up_cnt + 1))
 		ssh root@${vm} "ibv_devinfo > /root/IMB-PORT_STATE_${vm}"
 		port_state=$(ssh root@${vm} "ibv_devinfo | grep -i state")
 		port_state=$(echo $port_state | cut -d ' ' -f2)
 		if [ "$port_state" == "PORT_ACTIVE" ]; then 
 			LogMsg "$vm ib port is up - Succeeded; $port_state"
 		else
-			LogErr "$vm ib port is down - Failed; $port_state"
+			LogErr "$vm ib port is down; $port_state"
+			LogErr "Will remove the VM with bad port from constants.sh"
+			sed -i "s/${vm},\|,${vm}//g" ${CONSTANTS_FILE}
 			ib_port_state_down_cnt=$(($ib_port_state_down_cnt + 1))
 		fi
 	done
-
-	if [ $ib_port_state_down_cnt -ne 0 ]; then
+	min_port_state_up_cnt=$((min_port_state_up_cnt / 2))
+	# If half of the VMs (or more) are affected, the test will be failed
+	if [ $ib_port_state_down_cnt -ge $min_port_state_up_cnt ]; then
 		LogErr "IMB-MPI1 ib port state check failed in $ib_port_state_down_cnt VMs. Aborting further tests."
 		SetTestStateFailed
 		Collect_Kernel_Logs_From_All_VMs
@@ -140,6 +147,13 @@ function Main() {
 		exit 0
 	else
 		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_PORTSTATE"
+	fi
+	# Refresh slave array and total_virtual_machines
+	if [ $ib_port_state_down_cnt -gt 0 ]; then
+		. ${CONSTANTS_FILE}
+		slaves_array=$(echo ${slaves} | tr ',' ' ')
+		total_virtual_machines=$(($total_virtual_machines - $ib_port_state_down_cnt))
+		ib_port_state_down_cnt=0
 	fi
 	
 	# ############################################################################################################
@@ -421,19 +435,33 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			if [[ $imb_nbc_tests == "all" ]]; then
-				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
-				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
-					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
-				nbc_status=$?
-			else
-				LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
-				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
-					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
-				nbc_status=$?
-			fi
+			retries=0
+			while [ $retries -lt 3 ]; do
+				if [[ $imb_nbc_tests == "all" ]]; then
+					LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
+					LogMsg "IMB-NBC test iteration $attempt - Running."
+					$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
+						>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+					nbc_status=$?
+				else
+					LogMsg "$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
+					LogMsg "IMB-NBC test iteration $attempt - Running."
+					$mpi_run_path -hosts $master,$modified_slaves -ppn $nbc_ppn -n $(($VM_Size * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
+						>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+					nbc_status=$?
+				fi
+				if [ $nbc_status -eq 0 ]; then
+					LogMsg "IMB-NBC test iteration $attempt - Succeeded."
+					sleep 1
+					retries=4
+				else
+					sleep 10
+					let retries=retries+1
+					failed_nbc=$(cat IMB-NBC-AllNodes-output-Attempt-${attempt}.txt | grep Benchmarking | tail -1| awk '{print $NF}')
+					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}/${failed_nbc}/")
+					imb_nbc_tests=$nbc_benchmarks
+				fi
+			done
 			if [ $nbc_status -eq 0 ]; then
 				LogMsg "IMB-NBC test iteration $attempt - Succeeded."
 				sleep 1
@@ -444,7 +472,7 @@ function Main() {
 			fi
 		done
 
-		if [ $imb_rma_tests_iterations -gt 5 ]; then
+		if [ $imb_nbc_tests_iterations -gt 5 ]; then
 			mpi_status "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
 		fi
 
@@ -671,12 +699,26 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			LogMsg "$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
-			LogMsg "IMB-NBC test iteration $attempt - Running."
-			$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
-				> IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
-			nbc_status=$?
-		
+			retries=0
+			while [ $retries -lt 3 ]; do
+				LogMsg "$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests"
+				LogMsg "IMB-NBC test iteration $attempt - Running."
+				$mpi_run_path -hostlist $modified_slaves:$VM_Size -np $(($VM_Size * $total_virtual_machines)) -e MPI_IB_PKEY=$MPI_IB_PKEY $imb_nbc_path $imb_nbc_tests \
+					> IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+				nbc_status=$?
+			
+				if [ $nbc_status -eq 0 ]; then
+					LogMsg "IMB-NBC test iteration $attempt - Succeeded."
+					sleep 1
+					retries=4
+				else
+					sleep 10
+					let retries=retries+1
+					failed_nbc=$(cat IMB-NBC-AllNodes-output-Attempt-${attempt}.txt | grep Benchmarking | tail -1| awk '{print $NF}')
+					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}/${failed_nbc}/")
+					imb_nbc_tests=$nbc_benchmarks
+				fi
+			done
 			if [ $nbc_status -eq 0 ]; then
 				LogMsg "IMB-NBC test iteration $attempt - Succeeded."
 				sleep 1
@@ -810,6 +852,7 @@ function Main() {
 		# fi
 
 		#Verify IMB-MPI1 (pingpong & allreduce etc) tests.
+		total_virtual_machines=$(($total_virtual_machines + 1))
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
@@ -896,19 +939,33 @@ function Main() {
 		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
 		imb_nbc_final_status=0
 		for attempt in $total_attempts; do
-			if [[ $imb_nbc_tests == "all" ]]; then
-				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
-				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
-					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
-				nbc_status=$?
-			else
-				LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
-				LogMsg "IMB-NBC test iteration $attempt - Running."
-				$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
-					>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
-				nbc_status=$?
-			fi
+			retries=0
+			while [ $retries -lt 3 ]; do
+				if [[ $imb_nbc_tests == "all" ]]; then
+					LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path"
+					LogMsg "IMB-NBC test iteration $attempt - Running."
+					$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path \
+						>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+					nbc_status=$?
+				else
+					LogMsg "$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests"
+					LogMsg "IMB-NBC test iteration $attempt - Running."
+					$mpi_run_path --allow-run-as-root --host $master,$slaves -n $(($nbc_ppn * $total_virtual_machines)) $mpi_settings $imb_nbc_path $imb_nbc_tests \
+						>IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+					nbc_status=$?
+				fi
+				if [ $nbc_status -eq 0 ]; then
+					LogMsg "IMB-NBC test iteration $attempt - Succeeded."
+					sleep 1
+					retries=4
+				else
+					sleep 10
+					let retries=retries+1
+					failed_nbc=$(cat IMB-NBC-AllNodes-output-Attempt-${attempt}.txt | grep Benchmarking | tail -1| awk '{print $NF}')
+					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}/${failed_nbc}/")
+					imb_nbc_tests=$nbc_benchmarks
+				fi
+			done
 			if [ $nbc_status -eq 0 ]; then
 				LogMsg "IMB-NBC test iteration $attempt - Succeeded."
 				sleep 1
@@ -919,7 +976,7 @@ function Main() {
 			fi
 		done
 
-		if [ $imb_rma_tests_iterations -gt 5 ]; then
+		if [ $imb_nbc_tests_iterations -gt 5 ]; then
 			mpi_status "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
 		fi
 

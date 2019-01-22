@@ -1321,7 +1321,7 @@ Function RemoteCopy($uploadTo, $downloadFrom, $downloadTo, $port, $files, $usern
 						{
 							Write-Host "." -NoNewline
 							$now = Get-Date
-							if ( ($now - $downloadStartTime).TotalSeconds -gt 600 )
+							if ( ($now - $downloadStartTime).TotalSeconds -gt 1600 )
 							{
 								$downloadTimout = $true
 								LogError "Download Timout!"
@@ -1360,7 +1360,7 @@ Function RemoteCopy($uploadTo, $downloadFrom, $downloadTo, $port, $files, $usern
 						{
 							Write-Host "." -NoNewline
 							$now = Get-Date
-							if ( ($now - $downloadStartTime).TotalSeconds -gt 600 )
+							if ( ($now - $downloadStartTime).TotalSeconds -gt 1600 )
 							{
 								$downloadTimout = $true
 								LogError "Download Timout!"
