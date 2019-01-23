@@ -458,7 +458,7 @@ function Main() {
 					sleep 10
 					let retries=retries+1
 					failed_nbc=$(cat IMB-NBC-AllNodes-output-Attempt-${attempt}.txt | grep Benchmarking | tail -1| awk '{print $NF}')
-					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}/${failed_nbc}/")
+					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}//")
 					imb_nbc_tests=$nbc_benchmarks
 				fi
 			done
@@ -715,7 +715,7 @@ function Main() {
 					sleep 10
 					let retries=retries+1
 					failed_nbc=$(cat IMB-NBC-AllNodes-output-Attempt-${attempt}.txt | grep Benchmarking | tail -1| awk '{print $NF}')
-					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}/${failed_nbc}/")
+					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}//")
 					imb_nbc_tests=$nbc_benchmarks
 				fi
 			done
@@ -962,7 +962,7 @@ function Main() {
 					sleep 10
 					let retries=retries+1
 					failed_nbc=$(cat IMB-NBC-AllNodes-output-Attempt-${attempt}.txt | grep Benchmarking | tail -1| awk '{print $NF}')
-					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}/${failed_nbc}/")
+					nbc_benchmarks=$(echo $nbc_benchmarks | sed "s/^.*${failed_nbc}//")
 					imb_nbc_tests=$nbc_benchmarks
 				fi
 			done
