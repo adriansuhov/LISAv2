@@ -68,6 +68,10 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_TOTAL_REBOOT_COUNT</ReplaceThis>
+        <ReplaceWith>1</ReplaceWith>
+    </Parameter>
+    <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_MPI_SETTINGS_TCP</ReplaceThis>
         <ReplaceWith>-env I_MPI_DEBUG=2 -env I_MPI_FABRICS tcp</ReplaceWith>
     </Parameter>
@@ -92,6 +96,14 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>--mca btl self,vader,openib --mca btl_openib_cq_size 4096</ReplaceWith>
     </Parameter>
     <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_MPI_SETTINGS_TCP</ReplaceThis>
+        <ReplaceWith></ReplaceWith>
+    </Parameter>
+    <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_MPI_SETTINGS_IB</ReplaceThis>
+        <ReplaceWith></ReplaceWith>
+    </Parameter>
+    <Parameter>
         <ReplaceThis>INFINIBAND_IB_NIC</ReplaceThis>
         <ReplaceWith>eth0</ReplaceWith>
     </Parameter>
@@ -108,6 +120,10 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_MPI_TESTNAMES</ReplaceThis>
+        <ReplaceWith>allreduce</ReplaceWith>
+    </Parameter>
+    <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_PPN</ReplaceThis>
         <ReplaceWith>2</ReplaceWith>
     </Parameter>
@@ -117,6 +133,10 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_PPN</ReplaceThis>
+        <ReplaceWith>1</ReplaceWith>
+    </Parameter>
+    <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_PPN</ReplaceThis>
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
@@ -137,6 +157,10 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>Unidir_put Unidir_get Bidir_put Bidir_get One_put_all One_get_all All_put_all All_get_all Put_local Put_all_local Exchange_put Exchange_get Fetch_and_op Compare_and_swap</ReplaceWith>
     </Parameter>
     <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_RMA_TESTNAMES</ReplaceThis>
+        <ReplaceWith>allreduce</ReplaceWith>
+    </Parameter>
+    <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_RMA_TEST_COUNT</ReplaceThis>
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
@@ -146,6 +170,10 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_RMA_TEST_COUNT</ReplaceThis>
+        <ReplaceWith>1</ReplaceWith>
+    </Parameter>
+    <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_RMA_TEST_COUNT</ReplaceThis>
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>
@@ -161,6 +189,10 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>allreduce</ReplaceWith>
     </Parameter>
     <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_NBC_TESTNAMES</ReplaceThis>
+        <ReplaceWith>allreduce</ReplaceWith>
+    </Parameter>
+    <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_NBC_TEST_COUNT</ReplaceThis>
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
@@ -170,6 +202,10 @@ Scenario 2 : You need to run all the performance tests quickly.
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_OPEN_NBC_TEST_COUNT</ReplaceThis>
+        <ReplaceWith>1</ReplaceWith>
+    </Parameter>
+        <Parameter>
+        <ReplaceThis>INFINIBAND_MVAPICH_NBC_TEST_COUNT</ReplaceThis>
         <ReplaceWith>1</ReplaceWith>
     </Parameter>
     <Parameter>

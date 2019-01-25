@@ -320,33 +320,6 @@ function Main() {
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
 		fi
 
-		# Verify Intel MPI PingPong Tests (InterNode).
-		# final_mpi_internode_status=0
-
-		# for vm in $slaves_array; do
-		# 	LogMsg "$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong"
-		# 	LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-		# 	$mpi_run_path -hosts $master,$vm -ppn $mpi1_ppn -n $mpi1_ppn $non_shm_mpi_settings $imb_mpi1_path pingpong \
-		# 		>IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
-		# 	mpi_internode_status=$?
-		# 	if [ $mpi_internode_status -eq 0 ]; then
-		# 		LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
-		# 	else
-		# 		LogErr "IMB-MPI1 Internode status in $vm - Failed"
-		# 	fi
-		# 	final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
-		# done
-
-		# if [ $final_mpi_internode_status -ne 0 ]; then
-		# 	LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
-		# 	SetTestStateFailed
-		# 	Collect_Kernel_Logs_From_All_VMs
-		# 	LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
-		# 	exit 0
-		# else
-		# 	LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-		# fi
-
 		# Verify Intel MPI IMB-MPI1 (pingpong & allreduce etc) tests.
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		modified_slaves=${slaves//,/:$VM_Size,}
@@ -473,11 +446,11 @@ function Main() {
 		done
 
 		if [ $imb_nbc_tests_iterations -gt 5 ]; then
-			mpi_status "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
+			  Compress_Files "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
 		fi
 
 		if [ $imb_nbc_final_status -ne 0 ]; then
-			LogErr "IMB-RMA tests returned non-zero exit code. Aborting further tests."
+			LogErr "IMB-NBC tests returned non-zero exit code. Aborting further tests."
 			SetTestStateFailed
 			Collect_Kernel_Logs_From_All_VMs
 			LogErr "INFINIBAND_VERIFICATION_FAILED_NBC_ALLNODES"
@@ -495,7 +468,6 @@ function Main() {
 			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
 			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
-			#LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
 			LogMsg "imb_rma_final_status: $imb_rma_final_status"
 			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"			
@@ -578,34 +550,6 @@ function Main() {
 		else
 			LogErr "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
 		fi
-
-		# # Verify IBM PingPong Tests (InterNode).
-		# final_mpi_internode_status=0
-
-		# for vm in $slaves_array; do
-		# 	LogMsg "$mpi_run_path -hostlist $master:1,$vm:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096"
-		# 	LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-		# 	$mpi_run_path -hostlist $master:1,$vm:1 -np 2 -e MPI_IB_PKEY=$MPI_IB_PKEY -ibv $imb_ping_pong_path 4096 \
-		# 		> IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
-		# 	mpi_internode_status=$?
-
-		# 	if [ $mpi_internode_status -eq 0 ]; then
-		# 		LogMsg "IMB-MPI1 InterNode status in $vm - Succeeded."
-		# 	else
-		# 		LogErr "IMB-MPI1 InterNode status in $vm - Failed"
-		# 	fi
-		# 	final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
-		# done
-
-		# if [ $final_mpi_internode_status -ne 0 ]; then
-		# 	LogErr "IMB-MPI1 InterNode test failed in somes VMs. Aborting further tests."
-		# 	SetTestStateFailed
-		# 	Collect_Kernel_Logs_From_All_VMs
-		# 	LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
-		# 	exit 0
-		# else
-		# 	LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-		# fi
 
 		# Verify IBM IMB-MPI1 tests.
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
@@ -730,7 +674,7 @@ function Main() {
 		done
 
 		if [ $imb_nbc_tests_iterations -gt 5 ]; then
-			mpi_status "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
+			Compress_Files "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
 		fi
 
 		if [ $imb_nbc_final_status -ne 0 ]; then
@@ -745,7 +689,6 @@ function Main() {
 
 		Collect_Kernel_Logs_From_All_VMs
 
-		# finalStatus=$(($ib_nic_status + $final_mpi_intranode_status + $final_mpi_internode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
 		finalStatus=$(($final_ib_nic_status + $ib_port_state_down_cnt + $alloc_uar_limited_cnt + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_nbc_final_status))
 		
 		if [ $finalStatus -ne 0 ]; then
@@ -753,7 +696,6 @@ function Main() {
 			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
 			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
-			# LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
 			# LogMsg "imb_rma_final_status: $imb_rma_final_status"
 			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
@@ -764,7 +706,7 @@ function Main() {
 			SetTestStateCompleted
 		fi
 
-	else
+	elif [ $mpi_type == "open" ]; then
 		# ############################################################################################################
 		# OPEN MPI execution
 		# Need exclusive word intel if it runs in HPC image. Both will conflict.
@@ -823,33 +765,6 @@ function Main() {
 		else
 			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
 		fi
-		
-		#Verify PingPong Tests (InterNode).
-		# final_mpi_internode_status=0
-
-		# for vm in $slaves_array; do
-		#     LogMsg "$mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong"
-		#     LogMsg "Checking IMB-MPI1 InterNode status in $vm"
-		#     $mpi_run_path --allow-run-as-root $non_shm_mpi_settings -np $mpi1_ppn --host $master,$vm $imb_mpi1_path pingpong \
-		#         >IMB-MPI1-InterNode-pingpong-output-${master}-${vm}.txt
-		#     mpi_internode_status=$?
-		#     if [ $mpi_internode_status -eq 0 ]; then
-		#         LogMsg "IMB-MPI1 Internode status in $vm - Succeeded."
-		#     else
-		#         LogErr "IMB-MPI1 Internode status in $vm - Failed"
-		#     fi
-		#     final_mpi_internode_status=$(($final_mpi_internode_status + $mpi_internode_status))
-		# done
-
-		# if [ $final_mpi_internode_status -ne 0 ]; then
-		#     LogErr "IMB-MPI1 Internode test failed in somes VMs. Aborting further tests."
-		#     SetTestStateFailed
-		#     Collect_Kernel_Logs_From_All_VMs
-		#     LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_INTERNODE"
-		#     exit 0
-		# else
-		#     LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTERNODE"
-		# fi
 
 		#Verify IMB-MPI1 (pingpong & allreduce etc) tests.
 		total_virtual_machines=$(($total_virtual_machines + 1))
@@ -977,11 +892,11 @@ function Main() {
 		done
 
 		if [ $imb_nbc_tests_iterations -gt 5 ]; then
-			mpi_status "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
+			Compress_Files "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
 		fi
 
 		if [ $imb_nbc_final_status -ne 0 ]; then
-			LogErr "IMB-RMA tests returned non-zero exit code. Aborting further tests."
+			LogErr "IMB-NBC tests returned non-zero exit code. Aborting further tests."
 			SetTestStateFailed
 			Collect_Kernel_Logs_From_All_VMs
 			LogErr "INFINIBAND_VERIFICATION_FAILED_NBC_ALLNODES"
@@ -999,7 +914,193 @@ function Main() {
 			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
 			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
 			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
-			#LogMsg "final_mpi_internode_status: $final_mpi_internode_status"
+			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
+			LogMsg "imb_rma_final_status: $imb_rma_final_status"
+			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"
+			LogErr "INFINIBAND_VERIFICATION_FAILED"
+			SetTestStateFailed
+		else
+			LogMsg "INFINIBAND_VERIFIED_SUCCESSFULLY"
+			SetTestStateCompleted
+		fi
+	else
+		# ############################################################################################################
+		# MVAPICH MPI execution
+		mpi_run_path=$(find / -name mpirun_rsh | tail -n 1)
+		LogMsg "MPIRUN_RSH Path: $mpi_run_path"
+		
+		imb_mpi1_path=$(find / -name IMB-MPI1 | head -n 1)
+		LogMsg "IMB-MPI1 Path: $imb_mpi1_path"
+		
+		imb_rma_path=$(find / -name IMB-RMA | head -n 1)
+		LogMsg "IMB-RMA Path: $imb_rma_path"
+		
+		imb_nbc_path=$(find / -name IMB-NBC | head -n 1)
+		LogMsg "IMB-NBC Path: $imb_nbc_path"
+
+		#Verify PingPong Tests (IntraNode).
+		final_mpi_intranode_status=0
+
+		for vm1 in $master $slaves_array; do
+			# Manual running needs to clean up the old log files.
+			if [ -f ./IMB-MPI1-IntraNode-output-$vm1.txt ]; then
+				rm -f ./IMB-MPI1-IntraNode-output-$vm1*.txt
+				LogMsg "Removed the old log files"
+			fi
+			for vm2 in $master $slaves_array; do
+				log_file=IMB-MPI1-IntraNode-output-$vm1-$vm2.txt
+				LogMsg "$mpi_run_path -n 2 $vm1 $vm2 $imb_mpi1_path pingpong"
+				LogMsg "Checking IMB-MPI1 IntraNode status in $vm1"
+				ssh root@${vm1} "$mpi_run_path -n 2 $vm1 $vm2 $imb_mpi1_path pingpong >> $log_file"
+				mpi_intranode_status=$?
+
+				scp root@${vm1}:$log_file .
+
+				if [ $mpi_intranode_status -eq 0 ]; then
+					LogMsg "IMB-MPI1 IntraNode status in $vm1 - Succeeded."
+				else
+					LogErr "IMB-MPI1 IntraNode status in $vm1 - Failed"
+				fi
+				final_mpi_intranode_status=$(($final_mpi_intranode_status + $mpi_intranode_status))
+			done
+		done
+		if [ $final_mpi_intranode_status -ne 0 ]; then
+			LogErr "IMB-MPI1 Intranode ping_pong test failed in somes VMs. Aborting further tests."
+			SetTestStateFailed
+			Collect_Kernel_Logs_From_All_VMs
+			LogMsg "INFINIBAND_VERIFICATION_FAILED_MPI1_INTRANODE"
+			exit 0
+		else
+			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_INTRANODE"
+		fi
+
+		#Verify IMB-MPI1 (pingpong & allreduce etc) tests.
+		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
+		imb_mpi1_final_status=0
+		for attempt in $total_attempts; do
+			if [[ $imb_mpi1_tests == "all" ]]; then
+				LogMsg "$mpi_run_path -n $(($mpi1_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_mpi1_path"
+				LogMsg "IMB-MPI1 test iteration $attempt - Running."
+				$mpi_run_path -n $(($mpi1_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_mpi1_path > IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
+				mpi_status=$?
+			else
+				LogMsg "$mpi_run_path -n $(($mpi1_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_mpi1_path $imb_mpi1_tests"
+				LogMsg "IMB-MPI1 test iteration $attempt - Running."
+				$mpi_run_path -n $(($mpi1_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_mpi1_path $imb_mpi1_tests > IMB-MPI1-AllNodes-output-Attempt-${attempt}.txt
+				mpi_status=$?
+			fi
+			if [ $mpi_status -eq 0 ]; then
+				LogMsg "IMB-MPI1 test iteration $attempt - Succeeded."
+				sleep 1
+			else
+				LogErr "IMB-MPI1 test iteration $attempt - Failed."
+				imb_mpi1_final_status=$(($imb_mpi1_final_status + $mpi_status))
+				sleep 1
+			fi
+		done
+
+		if [ $imb_mpi1_tests_iterations -gt 5 ]; then
+			Compress_Files "IMB-MPI1-AllNodes-output.tar.gz" "IMB-MPI1-AllNodes-output-Attempt"
+		fi
+
+		if [ $imb_mpi1_final_status -ne 0 ]; then
+			LogErr "IMB-MPI1 tests returned non-zero exit code."
+			SetTestStateFailed
+			Collect_Kernel_Logs_From_All_VMs
+			LogErr "INFINIBAND_VERIFICATION_FAILED_MPI1_ALLNODES"
+			exit 0
+		else
+			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_MPI1_ALLNODES"
+
+		fi
+
+		#Verify IMB-RMA tests.
+		total_attempts=$(seq 1 1 $imb_rma_tests_iterations)
+		imb_rma_final_status=0
+		for attempt in $total_attempts; do
+			if [[ $imb_rma_tests == "all" ]]; then
+				LogMsg "$mpi_run_path -n $(($rma_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_rma_path"
+				LogMsg "IMB-RMA test iteration $attempt - Running."
+				$mpi_run_path -n $(($rma_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_rma_path > IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
+				rma_status=$?
+			else
+				LogMsg "$mpi_run_path -n $(($rma_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_rma_path $imb_rma_tests"
+				LogMsg "IMB-RMA test iteration $attempt - Running."
+				$mpi_run_path -n $(($rma_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_rma_path $imb_rma_tests > IMB-RMA-AllNodes-output-Attempt-${attempt}.txt
+				rma_status=$?
+			fi
+			if [ $rma_status -eq 0 ]; then
+				LogMsg "IMB-RMA test iteration $attempt - Succeeded."
+				sleep 1
+			else
+				LogErr "IMB-RMA test iteration $attempt - Failed."
+				imb_rma_final_status=$(($imb_rma_final_status + $rma_status))
+				sleep 1
+			fi
+		done
+
+		if [ $imb_rma_tests_iterations -gt 5 ]; then
+			Compress_Files "IMB-RMA-AllNodes-output.tar.gz" "IMB-RMA-AllNodes-output-Attempt"
+		fi
+
+		if [ $imb_rma_final_status -ne 0 ]; then
+			LogErr "IMB-RMA tests returned non-zero exit code. Aborting further tests."
+			SetTestStateFailed
+			Collect_Kernel_Logs_From_All_VMs
+			LogErr "INFINIBAND_VERIFICATION_FAILED_RMA_ALLNODES"
+			exit 0
+		else
+			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_RMA_ALLNODES"
+		fi
+
+		#Verify IMB-NBC tests.
+		total_attempts=$(seq 1 1 $imb_nbc_tests_iterations)
+		imb_nbc_final_status=0
+		for attempt in $total_attempts; do
+			if [[ $imb_nbc_tests == "all" ]]; then
+				LogMsg "$mpi_run_path -n $(($nbc_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_nbc_path"
+				LogMsg "IMB-NBC test iteration $attempt - Running."
+				$mpi_run_path -n $(($nbc_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_nbc_path > IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+				nbc_status=$?
+			else
+				LogMsg "$mpi_run_path -n $(($nbc_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_nbc_path $imb_nbc_tests"
+				LogMsg "IMB-NBC test iteration $attempt - Running."
+				$mpi_run_path -n $(($nbc_ppn * $total_virtual_machines)) $master $slaves_array $mpi_settings $imb_nbc_path $imb_nbc_tests > IMB-NBC-AllNodes-output-Attempt-${attempt}.txt
+				nbc_status=$?
+			fi
+			if [ $nbc_status -eq 0 ]; then
+				LogMsg "IMB-NBC test iteration $attempt - Succeeded."
+				sleep 1
+			else
+				LogErr "IMB-NBC test iteration $attempt - Failed."
+				imb_nbc_final_status=$(($imb_nbc_final_status + $nbc_status))
+				sleep 1
+			fi
+		done
+
+		if [ $imb_nbc_tests_iterations -gt 5 ]; then
+			Compress_Files "IMB-NBC-AllNodes-output.tar.gz" "IMB-NBC-AllNodes-output-Attempt"
+		fi
+
+		if [ $imb_nbc_final_status -ne 0 ]; then
+			LogErr "IMB-NBC tests returned non-zero exit code. Aborting further tests."
+			SetTestStateFailed
+			Collect_Kernel_Logs_From_All_VMs
+			LogErr "INFINIBAND_VERIFICATION_FAILED_NBC_ALLNODES"
+			exit 0
+		else
+			LogMsg "INFINIBAND_VERIFICATION_SUCCESS_NBC_ALLNODES"
+		fi
+
+		Collect_Kernel_Logs_From_All_VMs
+
+		finalStatus=$(($final_ib_nic_status + $ib_port_state_down_cnt + $alloc_uar_limited_cnt + $final_mpi_intranode_status + $imb_mpi1_final_status + $imb_rma_final_status + $imb_nbc_final_status))
+
+		if [ $finalStatus -ne 0 ]; then
+			LogMsg "${ib_nic}_status: $final_ib_nic_status"
+			LogMsg "ib_port_state_down_cnt: $ib_port_state_down_cnt"
+			LogMsg "alloc_uar_limited_cnt: $alloc_uar_limited_cnt"
+			LogMsg "final_mpi_intranode_status: $final_mpi_intranode_status"
 			LogMsg "imb_mpi1_final_status: $imb_mpi1_final_status"
 			LogMsg "imb_rma_final_status: $imb_rma_final_status"
 			LogMsg "imb_nbc_final_status: $imb_nbc_final_status"

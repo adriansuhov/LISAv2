@@ -106,9 +106,9 @@ function Main() {
 			yum -y groupinstall "InfiniBand Support"
 			Verify_Result
 			Debug_Msg "Installed group packages for InfiniBand Support"
-			yum -y install gtk2 atk cairo tcl tk createrepo
+			yum -y install gtk2 atk cairo tcl tk createrepo libibverbs-devel libibmad-devel byacc.x86_64
 			Verify_Result
-			Debug_Msg "Installed gtk2 atk cairo tcl tk createrepo"
+			Debug_Msg "Installed gtk2 atk cairo tcl tk createrepo libibverbs-devel libibmad-devel byacc.x86_64"
 			# this is required for specific MLX driver installation 
 			yum -y install kernel-devel-3.10.0-862.11.6.el7.x86_64
 			Verify_Result
@@ -339,7 +339,7 @@ function Main() {
 			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
 		fi
 		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
-	else 
+	elif [ $mpi_type == "open" ]; then 
 		# Open MPI installation
 		Debug_Msg "Open MPI installation running ..."
 		srcblob=https://partnerpipelineshare.blob.core.windows.net/mpi/openmpi-3.1.2.tar.gz
@@ -385,6 +385,56 @@ function Main() {
 
 		# Assign the bigger number to MPI_IB_PKEY
 		# Open MPI is not used this PKEY but leave it as-record for future use.
+		if [ $((firstkey - secondkey)) -gt 0 ]; then 
+			export MPI_IB_PKEY=$firstkey
+			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
+		else
+			export MPI_IB_PKEY=$secondkey
+			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
+		fi
+		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
+	else
+		# MVAPICH MPI installation
+		Debug_Msg "MVAPICH MPI installation running ..."
+		srcblob=https://partnerpipelineshare.blob.core.windows.net/mpi/mvapich2-2.3.tar.gz
+
+		Debug_Msg "Downloading the target MVAPICH source code"
+		wget $srcblob
+		Verify_Result
+
+		tar xvzf $(echo $srcblob | cut -d'/' -f5)
+		cd $(echo "${srcblob%.*}" | cut -d'/' -f5 | sed -n '/\.tar$/s///p')
+
+		Debug_Msg "Running configuration"
+		./configure 
+		Verify_Result
+
+		# Change YACC = yacc to YACC to bison -y
+		Debug_Msg "Compiling MVAPICH MPI"
+		make
+		Verify_Result
+
+		Debug_Msg "Installing new binaries in /usr/local/bin directory"
+		make install
+		Verify_Result
+
+		#Debug_Msg "Adding default installed path to system path"
+		export PATH=$PATH:/usr/local/bin
+
+		# set path string to verify IBM MPI binaries
+		target_bin=/usr/local/bin/mpirun
+
+		# file validation
+		Verify_File $target_bin
+		Debug_Msg "Completed MVAPICH MPI installation"
+
+		#Find the correct partition key for IB communicating with other VM
+		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
+		Debug_Msg "Getting the first key $firstkey"
+		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
+		Debug_Msg "Getting the second key $secondkey"
+
+		# Assign the bigger number to MPI_IB_PKEY
 		if [ $((firstkey - secondkey)) -gt 0 ]; then 
 			export MPI_IB_PKEY=$firstkey
 			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
