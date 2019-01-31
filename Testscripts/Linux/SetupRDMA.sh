@@ -514,8 +514,10 @@ function post_verification() {
 		_res_hostname=$(/opt/ibm/platform_mpi/bin/mpirun -TCP -hostlist $_ipaddress:1 hostname)
 	elif [ $mpi_type == "intel" ]; then
 		_res_hostname=$(mpirun --host $_ipaddress hostname)
-	else
+	elif [ $mpi_type == "open" ]; then
 		_res_hostname=$(mpirun --allow-run-as-root -np 1 --host $_ipaddress hostname)
+	else
+		_res_hostname=$(mpirun_rsh -np 1 $_ipaddress hostname)
 	fi
 	Debug_Msg "_res_hostname $_res_hostname"
 
@@ -546,7 +548,7 @@ function post_verification() {
 	elif [ $mpi_type == "intel" ]; then
 		Debug_Msg "TBD: This is intel MPI and no verification defined yet"
 	else
-		Debug_Msg "TBD: This is Open MPI and no verification defined yet"
+		Debug_Msg "TBD: This is Open and MVAPICH MPI, and no verification defined yet"
 	fi
 	Debug_Msg "Post_verification completed"
 }
