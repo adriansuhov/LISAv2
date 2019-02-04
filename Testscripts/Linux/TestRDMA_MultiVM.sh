@@ -119,6 +119,40 @@ function Main() {
 	fi
 
 	# ############################################################################################################
+	# ib kernel modules verfication
+	# mlx5_ib, rdma_cm, rdma_ucm, ib_ipoib shall be loaded in kernel
+	final_module_load_status=0
+	kernel_modules="mlx5_ib rdma_cm rdma_ucm ib_ipoib"
+
+	for vm in $master $slaves_array; do
+		LogMsg "Checking kernel modules in $vm"
+			for k_mod in $kernel_modules; do
+				temp=$(ssh root@${vm} "lsmod | grep $k_mod")
+				k_mod_status=$?
+				if [ $k_mod_status -eq 0 ]; then
+					# Verify ib kernel module is loaded in the system
+					LogMsg "${k_mod} module is loaded in ${vm}."
+				else
+					# Verify ib kernel module is not loaded in the system
+					LogErr "${k_mod} module is not loaded in ${vm}."
+					err_virtual_machines=$(($err_virtual_machines+1))
+				fi
+				final_module_load_status=$(($final_module_load_status + $k_mod_status))
+			done
+	done
+
+	if [ $final_module_load_status -ne 0 ]; then
+		LogErr "$err_virtual_machines VMs out of $total_virtual_machines did not load kernel modules successfully. Aborting Tests"
+		SetTestStateFailed
+		Collect_Kernel_Logs_From_All_VMs
+		LogErr "INFINIBAND_VERIFICATION_FAILED_${kernel_modules}"
+		exit 0
+	else
+		# Verify all VM have ib_nic available for further testing
+		LogMsg "INFINIBAND_VERIFICATION_SUCCESS_${kernel_modules}"
+	fi
+
+	# ############################################################################################################
 	# ibv_devinfo verifies PORT STATE
 	# PORT_ACTIVE (4) is expected. If PORT_DOWN (1), it fails
 	ib_port_state_down_cnt=0

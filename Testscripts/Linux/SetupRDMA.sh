@@ -183,6 +183,9 @@ function Main() {
 			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran
 			Verify_Result
 			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran"
+			zypper install -y rdma-core libibverbs librdmacm1 libibverbs-utils
+			Verify_Result
+			Debug_Msg "Installed packages - rdma-core libibverbs librdmacm1 libibverbs-utils"
 			zypper install -y net-tools-deprecated
 			Verify_Result
 			Debug_Msg "Installed packages - net-tools-deprecated"
