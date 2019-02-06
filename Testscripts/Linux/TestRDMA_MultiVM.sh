@@ -73,7 +73,7 @@ else
 	exit 1
 fi
 
-function Main() { 
+function Main() {
 	LogMsg "Starting $mpi_type MPI tests..."
 
 	# ############################################################################################################
@@ -85,6 +85,25 @@ function Main() {
 	err_virtual_machines=0
 	slaves_array=$(echo ${slaves} | tr ',' ' ')
 	nbc_benchmarks="Ibcast Iallgather Iallgatherv Igather Igatherv Iscatter Iscatterv Ialltoall Ialltoallv Ireduce Ireduce_scatter Iallreduce Ibarrier"
+
+	# [pkey code moved from SetupRDMA.sh to TestRDMA_MultiVM.sh]
+	# It's safer to obtain pkyes in the test script because some distros
+	# may require a reboot after the IB setup is completed
+	# Find the correct partition key for IB communicating with other VM
+	firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
+	Debug_Msg "Getting the first key $firstkey"
+	secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
+	Debug_Msg "Getting the second key $secondkey"
+
+	# Assign the bigger number to MPI_IB_PKEY
+	if [ $((firstkey - secondkey)) -gt 0 ]; then
+		export MPI_IB_PKEY=$firstkey
+		echo "MPI_IB_PKEY=$firstkey" >> /root/constants.sh
+	else
+		export MPI_IB_PKEY=$secondkey
+		echo "MPI_IB_PKEY=$secondkey" >> /root/constants.sh
+	fi
+	Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
 
 	for vm in $master $slaves_array; do
 		LogMsg "Checking $ib_nic status in $vm"

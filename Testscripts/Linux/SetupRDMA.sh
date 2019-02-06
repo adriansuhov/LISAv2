@@ -189,8 +189,14 @@ function Main() {
 			zypper install -y net-tools-deprecated
 			Verify_Result
 			Debug_Msg "Installed packages - net-tools-deprecated"
-			;;
+			# Enable mlx5_ib module on boot
+			echo "mlx5_ib" >> /etc/modules-load.d/mlx5_ib.conf
+			if [ $mpi_type == "intel" ]; then
+				echo "* soft memlock unlimited" >> /etc/security/limits.conf
+				echo "* hard memlock unlimited" >> /etc/security/limits.conf
+			fi
 			# Need to find alternative MLX driver package installation
+			;;
 		*)
 			msg="ERROR: Distro '$DISTRO' not supported or not implemented"
 			LogMsg "${msg}"
@@ -234,22 +240,6 @@ function Main() {
 		cat ibm_keystroke | $HOMEDIR/$(echo $srcblob | cut -d'/' -f5)
 		Verify_Result
 		Debug_Msg "Completed IBM Platform MPI installation"
-
-		#Find the correct partition key for IB communicating with other VM
-		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
-		Debug_Msg "Getting the first key $firstkey"
-		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
-		Debug_Msg "Getting the second key $secondkey"
-
-		# Assign the bigger number to MPI_IB_PKEY
-		if [ $((firstkey - secondkey)) -gt 0 ]; then 
-			export MPI_IB_PKEY=$firstkey
-			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
-		else
-			export MPI_IB_PKEY=$secondkey
-			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
-		fi
-		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
 
 		# set path string to verify IBM MPI binaries
 		target_bin=/opt/ibm/platform_mpi/bin/mpirun
@@ -327,21 +317,6 @@ function Main() {
 
 		Debug_Msg "Completed Intel MPI installation"
 
-		#Find the correct partition key for IB communicating with other VM
-		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
-		Debug_Msg "Getting the first key $firstkey"
-		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
-		Debug_Msg "Getting the second key $secondkey"
-
-		# Assign the bigger number to MPI_IB_PKEY
-		if [ $((firstkey - secondkey)) -gt 0 ]; then 
-			export MPI_IB_PKEY=$firstkey
-			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
-		else
-			export MPI_IB_PKEY=$secondkey
-			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
-		fi
-		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
 	elif [ $mpi_type == "open" ]; then 
 		# Open MPI installation
 		Debug_Msg "Open MPI installation running ..."
@@ -379,23 +354,6 @@ function Main() {
 		# file validation
 		Verify_File $target_bin
 		Debug_Msg "Completed Open MPI installation"
-
-		#Find the correct partition key for IB communicating with other VM
-		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
-		Debug_Msg "Getting the first key $firstkey"
-		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
-		Debug_Msg "Getting the second key $secondkey"
-
-		# Assign the bigger number to MPI_IB_PKEY
-		# Open MPI is not used this PKEY but leave it as-record for future use.
-		if [ $((firstkey - secondkey)) -gt 0 ]; then 
-			export MPI_IB_PKEY=$firstkey
-			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
-		else
-			export MPI_IB_PKEY=$secondkey
-			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
-		fi
-		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
 	else
 		# MVAPICH MPI installation
 		Debug_Msg "MVAPICH MPI installation running ..."
@@ -430,22 +388,6 @@ function Main() {
 		# file validation
 		Verify_File $target_bin
 		Debug_Msg "Completed MVAPICH MPI installation"
-
-		#Find the correct partition key for IB communicating with other VM
-		firstkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/0)
-		Debug_Msg "Getting the first key $firstkey"
-		secondkey=$(cat /sys/class/infiniband/mlx5_0/ports/1/pkeys/1)
-		Debug_Msg "Getting the second key $secondkey"
-
-		# Assign the bigger number to MPI_IB_PKEY
-		if [ $((firstkey - secondkey)) -gt 0 ]; then 
-			export MPI_IB_PKEY=$firstkey
-			echo "MPI_IB_PKEY=$firstkey" >> constants.sh
-		else
-			export MPI_IB_PKEY=$secondkey
-			echo "MPI_IB_PKEY=$secondkey" >> constants.sh
-		fi
-		Debug_Msg "Setting MPI_IB_PKEY to $MPI_IB_PKEY and copying it into constants.sh file"
 	fi
 	
 	# Install stable WALA agent and apply 3 patches
@@ -527,7 +469,7 @@ function post_verification() {
 	if [ $_hostname = $_res_hostname ]; then
 		Debug_Msg "PASSED: Verified hostname from MPI successfully"
 		echo "Found hostname matching from system info"
-	else 
+	else
 		Debug_Msg "FAILED: Verification of hostname failed."
 	fi
 
