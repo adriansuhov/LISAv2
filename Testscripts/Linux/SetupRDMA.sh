@@ -133,7 +133,7 @@ function Main() {
 			tar zxvf MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64.tgz
 			Verify_Result
 			Debug_Msg "Untar MLX driver tar ball file"
-			
+
 			Debug_Msg "Installing MLX OFED driver"
 			./MLNX_OFED_LINUX-4.5-1.0.1.0-rhel7.5-x86_64/mlnxofedinstall --add-kernel-support
 			Verify_Result
@@ -176,19 +176,19 @@ function Main() {
 			Debug_Msg "Restarting waagent service"
 			service waagent restart
 			;;
-		suse*)
+		suse*|sles*)
 			# install required packages
 			Debug_Msg "This is SUSE"
 			Debug_Msg "Installing required packages ..."
-			zypper install -y glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran
-			Verify_Result
-			Debug_Msg "Installed packages - glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran"
-			zypper install -y rdma-core libibverbs librdmacm1 libibverbs-utils
-			Verify_Result
-			Debug_Msg "Installed packages - rdma-core libibverbs librdmacm1 libibverbs-utils"
-			zypper install -y net-tools-deprecated
-			Verify_Result
-			Debug_Msg "Installed packages - net-tools-deprecated"
+			install_package "expect glibc-32bit glibc-devel libgcc_s1 libgcc_s1-32bit make gcc gcc-c++ gcc-fortran rdma-core libibverbs-devel librdmacm1 libibverbs-utils bison flex"
+			# force install package that is known to have broken dependencies
+			expect -c "spawn zypper in libibmad-devel
+				expect -timeout -1 \"Choose from\"
+				send \"2\r\"
+				expect -timeout -1 \"Continue\"
+				send \"y\r\"
+				interact
+			"
 			# Enable mlx5_ib module on boot
 			echo "mlx5_ib" >> /etc/modules-load.d/mlx5_ib.conf
 			if [ $mpi_type == "intel" ]; then
@@ -252,7 +252,7 @@ function Main() {
 		# compile ping_pong
 		cd $ping_pong_help
 		Debug_Msg "Compiling ping_pong binary in Platform help directory"
-		make
+		make -j $(nproc)
 		Verify_Result
 		Debug_Msg "Ping-pong compilation completed"
 
@@ -334,7 +334,7 @@ function Main() {
 		Verify_Result
 
 		Debug_Msg "Compiling Open MPI"
-		make
+		make -j $(nproc)
 		Verify_Result
 
 		Debug_Msg "Installing new binaries in /usr/local/bin directory"
@@ -367,12 +367,12 @@ function Main() {
 		cd $(echo "${srcblob%.*}" | cut -d'/' -f5 | sed -n '/\.tar$/s///p')
 
 		Debug_Msg "Running configuration"
-		./configure 
+		./configure
 		Verify_Result
 
 		# Change YACC = yacc to YACC to bison -y
 		Debug_Msg "Compiling MVAPICH MPI"
-		make
+		make -j $(nproc)
 		Verify_Result
 
 		Debug_Msg "Installing new binaries in /usr/local/bin directory"
@@ -428,7 +428,7 @@ function Main() {
 	Debug_Msg "Cloned Intel MPI Benchmark gitHub repo"
 	cd mpi-benchmarks/src_c
 	Debug_Msg "Building Intel MPI Benchmarks tests"
-	make
+	make -j $(nproc)
 	Debug_Msg "Completed Intel MPI Benchmarks"
 	Verify_Result
 	Debug_Msg "Intel Benchmark test installation completed"

@@ -157,8 +157,9 @@ Scenario 2 : You need to run all the performance tests quickly.
         <ReplaceWith>Unidir_put Unidir_get Bidir_put Bidir_get One_put_all One_get_all All_put_all All_get_all Put_local Put_all_local Exchange_put Exchange_get Fetch_and_op Compare_and_swap</ReplaceWith>
     </Parameter>
     <Parameter>
+        <!-- 08/02/2019 - 'Accumulate' and 'Get_accumulate' not working - removing them for now -->
         <ReplaceThis>INFINIBAND_MVAPICH_RMA_TESTNAMES</ReplaceThis>
-        <ReplaceWith>allreduce</ReplaceWith>
+        <ReplaceWith>Unidir_put Unidir_get Bidir_put Bidir_get One_put_all One_get_all All_put_all All_get_all Put_local Put_all_local Exchange_put Exchange_get Fetch_and_op Compare_and_swap</ReplaceWith>
     </Parameter>
     <Parameter>
         <ReplaceThis>INFINIBAND_INTEL_RMA_TEST_COUNT</ReplaceThis>

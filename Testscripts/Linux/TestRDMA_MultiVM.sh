@@ -1028,6 +1028,7 @@ function Main() {
 		fi
 
 		#Verify IMB-MPI1 (pingpong & allreduce etc) tests.
+		total_virtual_machines=$(($total_virtual_machines + 1))
 		total_attempts=$(seq 1 1 $imb_mpi1_tests_iterations)
 		imb_mpi1_final_status=0
 		for attempt in $total_attempts; do
