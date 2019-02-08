@@ -1,6 +1,34 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the Apache License.
 
+function Resolve-UninitializedIB {
+    $cmd = "lsmod | grep -P '^(?=.*mlx5_ib)(?=.*rdma_cm)(?=.*rdma_ucm)(?=.*ib_ipoib)'"
+    foreach ($VmData in $AllVMData) {
+        $ibvOutput = ""
+        $retries = 0
+        while ($retries -lt 4) {
+            $ibvOutput = RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username `
+                $test_super_user -password $password $cmd -ignoreLinuxExitCode:$true
+            if (-not $ibvOutput) {
+                LogWarn "IB is NOT initialized in $($VMData.RoleName)"
+                $restartStatus = RestartAllDeployments -AllVMData $VmData
+                Start-Sleep -s 20
+                if ($restartStatus -eq "True") {
+                    $retries++
+                } else {
+                    Throw "Failed to reboot $($VMData.RoleName)"
+                }
+            } else {
+                LogMsg "IB is initialized in $($VMData.RoleName)"
+                break
+            }
+        }
+        if ($retries -eq 4) {
+            Throw "After 4 reboots IB has NOT been initialized on $($VMData.RoleName)"
+        }
+    }
+}
+
 function Main {
     $resultArr = @()
     # Define two different users in run-time
@@ -58,7 +86,6 @@ function Main {
         $FirstRun = $true
 
         ProvisionVMsForLisa -AllVMData $AllVMData -installPackagesOnRoleNames "none"
-
         #endregion
 
         #region Generate constants.sh
@@ -97,7 +124,7 @@ function Main {
         #endregion
 
         #region Upload files to master VM
-        foreach ( $VMData in $AllVMData) {
+        foreach ($VMData in $AllVMData) {
             RemoteCopy -uploadTo $VMData.PublicIP -port $VMData.SSHPort `
                 -files "$constantsFile,$($CurrentTestData.files)" -username $test_super_user -password $password -upload
         }
@@ -108,20 +135,9 @@ function Main {
         $TotalSuccessCount = 0
         $Iteration = 0
 
-        # How to manage multiple job id?
-        # what if any of jobs are infinitive loop? timer? what is different from waitfor?
-        # $testJob = RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
-        #        -password $password "/root/SetupRDMA.sh" -RunInBackground
-
-        # #region MONITOR TEST
-        # while ((Get-Job -Id $testJob).State -eq "Running") {
-        #     LogMsg "Current SetupRDMA Status : Running"
-        #     WaitFor -seconds 60
-        # }
-
-        LogMsg "SetupRDMS is called"
+        LogMsg "SetupRDMA.sh is called"
         # Call SetupRDMA.sh here, and it handles all packages, MPI, Benchmark installation.
-        foreach ( $VMData in $AllVMData ) {
+        foreach ($VMData in $AllVMData) {
             RunLinuxCmd -ip $VMData.PublicIP -port $VMData.SSHPort -username $test_super_user `
                 -password $password "/root/SetupRDMA.sh" -RunInBackground
             WaitFor -seconds 2
@@ -160,7 +176,9 @@ function Main {
         $restartStatus = RestartAllDeployments -AllVMData $AllVMData
         LogMsg "Rebooting All VMs after all setup is done: $restartStatus"
         # Wait for VM boot up and update ip address
-        Start-Sleep -Seconds 240
+        Start-Sleep -Seconds 60
+        # In some cases, IB will not be initialized after reboot
+        Resolve-UninitializedIB
 
         do {
             if ($FirstRun) {
@@ -394,6 +412,8 @@ function Main {
             if ($RemainingRebootIterations -gt 0) {
                 if ($testResult -eq "PASS") {
                     $RestartStatus = RestartAllDeployments -AllVMData $AllVMData
+                    # In some cases, IB will not be initialized after reboot
+                    Resolve-UninitializedIB
                     $RemainingRebootIterations -= 1
                 }
                 else {
