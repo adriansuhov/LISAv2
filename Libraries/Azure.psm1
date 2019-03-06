@@ -362,21 +362,41 @@ Function Delete-ResourceGroup([string]$RGName, [switch]$KeepDisks, [bool]$UseExi
     }
     if ($ResourceGroup) {
         if ($UseExistingRG) {
-            $CurrentResources = Get-AzureRmResource -ResourceGroupName $RGName
-            while ($CurrentResources) {
-                foreach ($resource in $CurrentResources) {
-                    Write-LogInfo "Removing resource $($resource.Name), type $($resource.ResourceType)"
-                    try {
-                        $null = Remove-AzureRmResource -ResourceId $resource.ResourceId -Force -Verbose
-                    }
-                    catch {
-                        Write-LogErr "Failed to delete resource $($resource.Name). We will try to remove it in next attempt."
-                    }
-                }
+            # Get RG lock. If there is any lock in place, don't try to delete the Resource Group
+            # "Microsoft.Authorization/locks" is the standard ResourceType for RG locks
+            $rgLock = (Get-AzureRmResourceLock -ResourceGroupName $RGName).ResourceType -eq "Microsoft.Authorization/locks"
+            if (-not $rgLock) {
                 $CurrentResources = Get-AzureRmResource -ResourceGroupName $RGName
+                $attempts = 0
+                while (($CurrentResources) -and ($attempts -le 10)) {
+                    $CurrentResources = Get-AzureRmResource -ResourceGroupName $RGName
+                    $unlockedResources = @()
+                    # Get the lock for each resource and compute a list of "unlocked" resources
+                    foreach ($resource in $CurrentResources) {
+                        $resourceLock = Get-AzureRmResourceLock -ResourceGroupName $RGName `
+                            -ResourceType $resource.ResourceType -ResourceName $resource.Name
+                        if (-not $resourceLock) {
+                            $unlockedResources += $resource
+                        }
+                    }
+                    # Only try to delete the "unlocked" resources
+                    foreach ($resource in $unlockedResources) {
+                        Write-LogInfo "Removing resource $($resource.Name), type $($resource.ResourceType)"
+                        try {
+                            $null = Remove-AzureRmResource -ResourceId $resource.ResourceId -Force -Verbose
+                        }
+                        catch {
+                            Write-LogErr "Failed to delete resource $($resource.Name). We will try to remove it in next attempt."
+                        }
+                    }
+                    $CurrentResources = $unlockedResources
+                    $attempts++
+                }
+                Write-LogInfo "Resources in $RGName are deleted."
+                $retValue = $true
+            } else {
+                Write-LogWarn "Lock is in place for $RGName. Skipping RG delete!"
             }
-            Write-LogInfo "Resources in $RGName are all deleted."
-            $retValue = $true
         }
         else {
             if ( $XmlSecrets.secrets.AutomationRunbooks.CleanupResourceGroupRunBook ) {
